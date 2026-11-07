@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="icon.png" alt="Snap logo" width="160">
+  <img src="build/icon.png" alt="Snap logo" width="320">
 </p>
 
 <h1 align="center">Snap</h1>
