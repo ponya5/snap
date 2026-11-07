@@ -35,6 +35,40 @@ Press a shortcut, drag over any part of the screen, then either annotate and sav
 
 Videos are saved as `.mp4` when supported, otherwise `.webm`. Settings are stored in `settings.json` in the app's user data folder.
 
+## Install
+
+There is no published download yet, so you build the installer once from source. You need [Node.js](https://nodejs.org) and [Git](https://git-scm.com).
+
+### macOS
+
+1. Get the code and build the installer:
+   ```bash
+   git clone https://github.com/ponya5/snap.git
+   cd snap
+   npm install
+   CSC_IDENTITY_AUTO_DISCOVERY=false npm run dist
+   ```
+2. Open `dist/Snap-0.1.0-arm64.dmg` and drag **Snap** into **Applications**. Then eject the Snap disk in Finder.
+3. Open Snap from Applications. If macOS says it can't verify the app, right-click Snap, choose **Open**, then **Open** again. Or run `xattr -cr /Applications/Snap.app`.
+4. Press `Cmd+Shift+S` or click "Capture…" in the Snap window. When macOS asks, allow Snap under **System Settings > Privacy & Security > Screen Recording**, then quit and reopen Snap.
+
+The DMG matches the architecture of the Mac that built it (Apple Silicon or Intel).
+
+### Windows (not tested yet)
+
+1. On a Windows PC, get the code and build the installer:
+   ```powershell
+   git clone https://github.com/ponya5/snap.git
+   cd snap
+   npm install
+   npm run dist -- --win
+   ```
+2. Run the installer in `dist/` (`Snap Setup 0.1.0.exe`) and follow the steps.
+3. If Windows SmartScreen warns about an unknown publisher, click **More info > Run anyway**. The installer is unsigned.
+4. Press `Ctrl+Shift+S` to capture. Snap runs in the system tray (the `^` area next to the clock).
+
+To try Snap without installing, run `npm install` and `npm start` instead.
+
 ## Run from source
 
 Requires Node.js.
