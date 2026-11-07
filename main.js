@@ -179,7 +179,7 @@ app.whenReady().then(() => {
   ]));
   app.dock?.setMenu(Menu.buildFromTemplate([{ label: 'Capture…', click: capture }, { label: 'Settings…', click: showSettings }]));
   showHome();
-  tray = new Tray(nativeImage.createFromPath(path.join(__dirname, 'icon.png')));
+  tray = new Tray(nativeImage.createFromPath(path.join(__dirname, 'icon.png')).resize({ height: 22 }));
   tray.on('click', capture);
   menu();
   globalShortcut.register(settings.hotkey, capture);

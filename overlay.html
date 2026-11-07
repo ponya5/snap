@@ -6,43 +6,80 @@
   #bar, #vbar { position: fixed; display: none; gap: 4px; padding: 4px; background: #222; border-radius: 6px; box-shadow: 0 2px 8px #0008; cursor: default; align-items: center; }
   #bar button, #vbar button, #pick button { background: #444; color: #fff; border: 0; border-radius: 4px; padding: 6px 10px; cursor: pointer; font-size: 13px; }
   #bar button:hover, #vbar button:hover, #pick button:hover { background: #666; }
-  #bar button.on { background: #2d7ff9; }
-  #col { width: 30px; height: 28px; border: 0; padding: 0; background: none; }
+  #bar button.on, #pick button.on { background: #2d7ff9; }
+  #bar .sep { width: 1px; height: 22px; background: #555; margin: 0 2px; }
+  #sw { width: 30px; height: 28px; padding: 0; border: 2px solid #fff !important; background: #ff2d2d; }
+  #sz { background: #444; color: #fff; border: 0; border-radius: 4px; padding: 6px 4px; font-size: 13px; }
+  #pal { position: fixed; display: none; grid-template-columns: repeat(6, 26px); gap: 6px; padding: 8px; background: #222; border-radius: 8px; box-shadow: 0 2px 10px #000a; cursor: default; }
+  #pal i { width: 26px; height: 26px; border-radius: 50%; border: 2px solid #fff3; cursor: pointer; box-sizing: border-box; }
+  #pal i:hover { border-color: #fff; }
+  #pal input { grid-column: 1 / -1; background: #333; color: #fff; border: 1px solid #555; border-radius: 4px; padding: 4px 6px; font: 13px monospace; }
   #vbar label { color: #fff; padding: 0 8px; cursor: pointer; display: flex; gap: 4px; align-items: center; }
-  #vbar .rec { background: #d93a3a; }
+  #vbar .rec { background: #d93a3a !important; }
   #pick { position: fixed; top: 16px; left: 50%; transform: translateX(-50%); display: flex; gap: 4px; padding: 4px; background: #222; border-radius: 8px; box-shadow: 0 2px 8px #0008; cursor: default; }
   #pick button { font-size: 14px; padding: 8px 16px; }
-  #pick button.on { background: #2d7ff9; }
-  #hint { position: fixed; top: 72px; left: 50%; transform: translateX(-50%); color: #fff; background: #000a; padding: 8px 14px; border-radius: 6px; display: none; pointer-events: none; }
-  #ti { position: fixed; display: none; font: bold 20px system-ui; background: transparent; border: 1px dashed #fff; outline: 0; padding: 0; min-width: 80px; }
+  #hint { position: fixed; top: 72px; left: 50%; transform: translateX(-50%); color: #fff; background: #000a; padding: 8px 14px; border-radius: 6px; pointer-events: none; }
+  #tip { position: fixed; display: none; background: #000; color: #fff; border: 1px solid #555; padding: 5px 9px; border-radius: 5px; font-size: 12px; white-space: nowrap; pointer-events: none; z-index: 10; }
+  #ti { position: fixed; display: none; font-family: system-ui; font-weight: bold; background: transparent; border: 1px dashed #fff; outline: 0; padding: 0; min-width: 80px; }
 </style>
 <canvas id="c"></canvas>
 <input id="ti">
-<div id="pick"><button data-m="shot">📷 Screenshot</button><button data-m="video">🎥 Video</button><button id="cfg">⚙️</button></div>
-<div id="hint" style="display:block">Drag to select an area · Esc to cancel</div>
+<div id="pick">
+  <button data-m="shot" title="Screenshot mode: select an area, annotate, copy or save">📷 Screenshot</button><button data-m="video" title="Video mode: select an area and record it">🎥 Video</button>
+  <button id="full" title="Capture the whole screen">🖥 Full screen</button><button id="cfg" title="Open Snap settings">⚙️</button>
+</div>
+<div id="hint">Drag to select an area · Esc to cancel</div>
+<div id="pal"></div>
+<div id="tip"></div>
 <div id="vbar">
-  <label><input type="checkbox" id="sys" checked> System sound</label>
-  <label><input type="checkbox" id="mic"> Microphone</label>
-  <button id="go" class="rec">⏺ Start recording</button>
-  <button id="vx">✕</button>
+  <label title="Record the sound your computer plays"><input type="checkbox" id="sys" checked> System sound</label>
+  <label title="Record your microphone"><input type="checkbox" id="mic"> Microphone</label>
+  <button id="go" class="rec" title="Start recording after the countdown">⏺ Start recording</button>
+  <button id="vx" title="Cancel (Esc)">✕</button>
 </div>
 <div id="bar">
-  <button data-t="pen" class="on" title="Pen">✏️</button>
+  <button data-t="pen" class="on" title="Pen: freehand drawing">✏️</button>
+  <button data-t="hl" title="Highlighter: translucent marker">🖍</button>
+  <button data-t="line" title="Line">╱</button>
   <button data-t="arrow" title="Arrow">➜</button>
-  <button data-t="rect" title="Rectangle">▭</button>
-  <button data-t="text" title="Text">T</button>
-  <input id="col" type="color" value="#ff2d2d" title="Color">
-  <button id="undo" title="Undo (Ctrl/Cmd+Z)">↶</button>
-  <button id="copy" title="Copy (Ctrl/Cmd+C)">Copy</button>
-  <button id="save" title="Save (Ctrl/Cmd+S)">Save</button>
-  <button id="x" title="Close (Esc)">✕</button>
+  <button data-t="rect" title="Rectangle outline">▭</button>
+  <button data-t="ell" title="Ellipse outline">◯</button>
+  <button data-t="text" title="Text: click, type, press Enter">T</button>
+  <button data-t="blur" title="Pixelate: hide sensitive info">▦</button>
+  <span class="sep"></span>
+  <button id="sw" title="Color: choose drawing and text color"></button>
+  <select id="sz" title="Size: line width and text size">
+    <option value="0">S</option><option value="1" selected>M</option><option value="2">L</option><option value="3">XL</option>
+  </select>
+  <span class="sep"></span>
+  <button id="undo" title="Undo last drawing (Ctrl/Cmd+Z)">↶</button>
+  <button id="copy" title="Copy to clipboard and close (Ctrl/Cmd+C)">Copy</button>
+  <button id="save" title="Save to file (Ctrl/Cmd+S)">Save</button>
+  <button id="x" title="Close without saving (Esc)">✕</button>
 </div>
 <script>
 const $ = id => document.getElementById(id);
-const c = $('c'), g = c.getContext('2d'), bar = $('bar'), ti = $('ti');
+const c = $('c'), g = c.getContext('2d'), bar = $('bar'), ti = $('ti'), pal = $('pal');
 const dpr = devicePixelRatio;
-let mode = null, img, S = 1, sel = null, start = null, editing = false, shapes = [], cur = null, tool = 'pen', color = '#ff2d2d';
+const WIDTHS = [2, 4, 7, 12], FONTS = [16, 24, 36, 54];
+const COLORS = ['#ff2d2d', '#ff8a00', '#ffd400', '#2ecc40', '#00c2ff', '#2d7ff9', '#8a4dff', '#ff4da6', '#000000', '#7f7f7f', '#ffffff', '#8b5a2b'];
+let mode = null, img, S = 1, sel = null, start = null, editing = false, shapes = [], cur = null;
+let tool = 'pen', color = COLORS[0], size = 1, resizing = null;
 
+// ---- tooltips (native title tooltips are unreliable in this overlay)
+const tip = $('tip');
+document.querySelectorAll('[title]').forEach(el => { el.dataset.tip = el.title; el.removeAttribute('title'); });
+addEventListener('mouseover', e => {
+  const el = e.target.closest('[data-tip]');
+  if (!el) { tip.style.display = 'none'; return; }
+  tip.textContent = el.dataset.tip; tip.style.display = 'block';
+  const r = el.getBoundingClientRect(), w = tip.offsetWidth, h = tip.offsetHeight;
+  tip.style.left = Math.max(4, Math.min(innerWidth - w - 4, r.left + r.width / 2 - w / 2)) + 'px';
+  tip.style.top = (r.top - h - 8 > 4 ? r.top - h - 8 : r.bottom + 8) + 'px';
+});
+addEventListener('mousedown', () => { tip.style.display = 'none'; });
+
+// ---- mode / setup
 function setMode(m, user) {
   mode = m;
   document.querySelectorAll('[data-m]').forEach(b => b.classList.toggle('on', b.dataset.m === m));
@@ -58,18 +95,32 @@ api.onShot(({ url, mode: m, sys, mic }) => {
   setMode(m || 'shot');
 });
 
+// ---- drawing
 function draw(k, s) {
-  k.strokeStyle = k.fillStyle = s.c; k.lineWidth = 3; k.lineCap = k.lineJoin = 'round';
+  k.strokeStyle = k.fillStyle = s.c; k.lineWidth = s.lw || 3; k.lineCap = k.lineJoin = 'round';
   if (s.t === 'pen') { k.beginPath(); s.p.forEach(([a, b], i) => i ? k.lineTo(a, b) : k.moveTo(a, b)); k.stroke(); }
+  else if (s.t === 'hl') { k.globalAlpha = .4; k.lineWidth = s.lw * 4; k.lineCap = 'butt'; k.beginPath(); s.p.forEach(([a, b], i) => i ? k.lineTo(a, b) : k.moveTo(a, b)); k.stroke(); k.globalAlpha = 1; }
   else if (s.t === 'rect') k.strokeRect(s.x, s.y, s.w, s.h);
-  else if (s.t === 'arrow') {
-    const a = Math.atan2(s.y2 - s.y, s.x2 - s.x);
+  else if (s.t === 'ell') { k.beginPath(); k.ellipse(s.x + s.w / 2, s.y + s.h / 2, Math.abs(s.w / 2), Math.abs(s.h / 2), 0, 0, 7); k.stroke(); }
+  else if (s.t === 'line' || s.t === 'arrow') {
     k.beginPath(); k.moveTo(s.x, s.y); k.lineTo(s.x2, s.y2); k.stroke();
-    k.beginPath(); k.moveTo(s.x2, s.y2);
-    for (const d of [2.6, -2.6]) k.lineTo(s.x2 + 14 * Math.cos(a + d), s.y2 + 14 * Math.sin(a + d));
-    k.closePath(); k.fill();
-  } else if (s.t === 'text') { k.font = 'bold 20px system-ui'; k.textBaseline = 'top'; k.fillText(s.s, s.x, s.y); }
+    if (s.t === 'arrow') {
+      const a = Math.atan2(s.y2 - s.y, s.x2 - s.x), L = 10 + s.lw * 2.5;
+      k.beginPath(); k.moveTo(s.x2, s.y2);
+      for (const d of [2.6, -2.6]) k.lineTo(s.x2 + L * Math.cos(a + d), s.y2 + L * Math.sin(a + d));
+      k.closePath(); k.fill();
+    }
+  } else if (s.t === 'text') { k.font = `bold ${s.fs}px system-ui`; k.textBaseline = 'top'; k.fillText(s.s, s.x, s.y); }
+  else if (s.t === 'blur') {
+    const x = Math.min(s.x, s.x + s.w), y = Math.min(s.y, s.y + s.h), w = Math.abs(s.w), h = Math.abs(s.h);
+    if (w < 2 || h < 2) return;
+    const t = document.createElement('canvas'); t.width = Math.max(1, Math.ceil(w / 10)); t.height = Math.max(1, Math.ceil(h / 10));
+    t.getContext('2d').drawImage(img, x * S, y * S, w * S, h * S, 0, 0, t.width, t.height);
+    k.imageSmoothingEnabled = false; k.drawImage(t, x, y, w, h); k.imageSmoothingEnabled = true;
+  }
 }
+
+const HANDLES = [['nw', 0, 0], ['n', .5, 0], ['ne', 1, 0], ['e', 1, .5], ['se', 1, 1], ['s', .5, 1], ['sw', 0, 1], ['w', 0, .5]];
 
 function render() {
   g.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -83,6 +134,10 @@ function render() {
   g.save(); g.beginPath(); g.rect(x, y, w, h); g.clip();
   [...shapes, cur].forEach(s => s && draw(g, s));
   g.restore();
+  if (editing) {
+    g.fillStyle = '#fff'; g.strokeStyle = '#2d7ff9';
+    HANDLES.forEach(([, fx, fy]) => { g.fillRect(x + w * fx - 4, y + h * fy - 4, 8, 8); g.strokeRect(x + w * fx - 4, y + h * fy - 4, 8, 8); });
+  }
 }
 
 function exportPNG() {
@@ -95,46 +150,11 @@ function exportPNG() {
   return o.toDataURL('image/png');
 }
 
-const inSel = e => e.clientX >= sel.x && e.clientX <= sel.x + sel.w && e.clientY >= sel.y && e.clientY <= sel.y + sel.h;
-const rect = (e) => ({ x: Math.min(start.x, e.clientX), y: Math.min(start.y, e.clientY), w: Math.abs(e.clientX - start.x), h: Math.abs(e.clientY - start.y) });
-
-function commitText() {
-  if (ti.style.display === 'block' && ti.value) shapes.push({ t: 'text', x: parseFloat(ti.style.left), y: parseFloat(ti.style.top), s: ti.value, c: color });
-  ti.style.display = 'none'; ti.value = ''; render();
+// ---- selection
+function enterEdit() {
+  editing = true; document.body.style.cursor = 'default'; $('hint').style.display = 'none';
+  place(mode === 'shot' ? bar : $('vbar')); render();
 }
-
-addEventListener('mousedown', e => {
-  if (e.target.closest('#bar, #vbar, #pick') || e.target === ti) return;
-  commitText();
-  if (!editing) { start = { x: e.clientX, y: e.clientY }; sel = null; return; }
-  if (!inSel(e)) return;
-  start = { x: e.clientX, y: e.clientY };
-  if (tool === 'text') { Object.assign(ti.style, { display: 'block', left: start.x + 'px', top: start.y + 'px', color }); setTimeout(() => ti.focus()); start = null; return; }
-  cur = tool === 'pen' ? { t: 'pen', c: color, p: [[start.x, start.y]] }
-    : tool === 'rect' ? { t: 'rect', c: color, x: start.x, y: start.y, w: 0, h: 0 }
-    : { t: 'arrow', c: color, x: start.x, y: start.y, x2: start.x, y2: start.y };
-});
-
-addEventListener('mousemove', e => {
-  if (!start) return;
-  if (!editing) sel = rect(e);
-  else if (cur) {
-    if (cur.t === 'pen') cur.p.push([e.clientX, e.clientY]);
-    else if (cur.t === 'rect') { cur.w = e.clientX - cur.x; cur.h = e.clientY - cur.y; }
-    else { cur.x2 = e.clientX; cur.y2 = e.clientY; }
-  }
-  render();
-});
-
-addEventListener('mouseup', () => {
-  if (!start) return;
-  if (!editing) {
-    if (sel && sel.w > 5 && sel.h > 5) { editing = true; document.body.style.cursor = 'default'; $('hint').style.display = 'none'; place(mode === 'shot' ? bar : $('vbar')); }
-    else sel = null;
-  } else if (cur) { shapes.push(cur); cur = null; }
-  start = null; render();
-});
-
 function place(el) {
   el.style.display = 'flex';
   const w = el.offsetWidth, h = el.offsetHeight;
@@ -142,6 +162,74 @@ function place(el) {
   const below = sel.y + sel.h + 8;
   el.style.top = (below + h < innerHeight ? below : Math.max(4, sel.y + sel.h - h - 8)) + 'px';
 }
+$('full').onclick = () => { sel = { x: 0, y: 0, w: innerWidth, h: innerHeight }; enterEdit(); };
+
+const inSel = e => e.clientX >= sel.x && e.clientX <= sel.x + sel.w && e.clientY >= sel.y && e.clientY <= sel.y + sel.h;
+const rect = e => ({ x: Math.min(start.x, e.clientX), y: Math.min(start.y, e.clientY), w: Math.abs(e.clientX - start.x), h: Math.abs(e.clientY - start.y) });
+function hit(e) {
+  if (!editing) return null;
+  for (const [n, fx, fy] of HANDLES)
+    if (Math.abs(e.clientX - (sel.x + sel.w * fx)) <= 7 && Math.abs(e.clientY - (sel.y + sel.h * fy)) <= 7) return n;
+  return null;
+}
+const CURSORS = { n: 'ns-resize', s: 'ns-resize', e: 'ew-resize', w: 'ew-resize', nw: 'nwse-resize', se: 'nwse-resize', ne: 'nesw-resize', sw: 'nesw-resize' };
+
+// ---- text
+function commitText() {
+  if (ti.style.display === 'block' && ti.value) shapes.push({ t: 'text', x: parseFloat(ti.style.left), y: parseFloat(ti.style.top), s: ti.value, c: color, fs: FONTS[size] });
+  ti.style.display = 'none'; ti.value = ''; render();
+}
+
+// ---- mouse
+addEventListener('mousedown', e => {
+  if (e.target.closest('#bar, #vbar, #pick, #pal') || e.target === ti) return;
+  pal.style.display = 'none';
+  commitText();
+  if (!editing) { start = { x: e.clientX, y: e.clientY }; sel = null; return; }
+  const h = hit(e);
+  if (h) { resizing = h; start = { x: e.clientX, y: e.clientY }; bar.style.display = $('vbar').style.display = 'none'; return; }
+  if (!inSel(e)) return;
+  start = { x: e.clientX, y: e.clientY };
+  const lw = WIDTHS[size], { x, y } = start;
+  if (tool === 'text') {
+    Object.assign(ti.style, { display: 'block', left: x + 'px', top: y + 'px', color, fontSize: FONTS[size] + 'px' });
+    setTimeout(() => ti.focus()); start = null; return;
+  }
+  cur = tool === 'pen' || tool === 'hl' ? { t: tool, c: color, lw, p: [[x, y]] }
+    : tool === 'rect' || tool === 'ell' || tool === 'blur' ? { t: tool, c: color, lw, x, y, w: 0, h: 0 }
+    : { t: tool, c: color, lw, x, y, x2: x, y2: y };
+});
+
+addEventListener('mousemove', e => {
+  if (!start) {
+    if (editing) { const h = hit(e); document.body.style.cursor = h ? CURSORS[h] : inSel(e) ? 'crosshair' : 'default'; }
+    return;
+  }
+  if (resizing) {
+    let l = sel.x, r = sel.x + sel.w, t = sel.y, b = sel.y + sel.h;
+    if (resizing.includes('w')) l = e.clientX;
+    if (resizing.includes('e')) r = e.clientX;
+    if (resizing.includes('n')) t = e.clientY;
+    if (resizing.includes('s')) b = e.clientY;
+    sel = { x: Math.min(l, r), y: Math.min(t, b), w: Math.max(10, Math.abs(r - l)), h: Math.max(10, Math.abs(b - t)) };
+  } else if (!editing) sel = rect(e);
+  else if (cur) {
+    if (cur.p) cur.p.push([e.clientX, e.clientY]);
+    else if ('w' in cur) { cur.w = e.clientX - cur.x; cur.h = e.clientY - cur.y; }
+    else { cur.x2 = e.clientX; cur.y2 = e.clientY; }
+  }
+  render();
+});
+
+addEventListener('mouseup', () => {
+  if (!start) return;
+  if (resizing) { resizing = null; place(mode === 'shot' ? bar : $('vbar')); }
+  else if (!editing) { if (sel && sel.w > 5 && sel.h > 5) enterEdit(); else sel = null; }
+  else if (cur) { shapes.push(cur); cur = null; }
+  start = null; render();
+});
+
+// ---- toolbar
 $('cfg').onclick = () => { api.close(); api.cmd('settings'); };
 $('go').onclick = () => api.rec({ region: sel, dw: innerWidth, sys: $('sys').checked, mic: $('mic').checked });
 $('vx').onclick = () => api.close();
@@ -150,7 +238,25 @@ document.querySelectorAll('[data-t]').forEach(b => b.onclick = () => {
   tool = b.dataset.t;
   document.querySelectorAll('[data-t]').forEach(o => o.classList.toggle('on', o === b));
 });
-$('col').oninput = e => { color = e.target.value; };
+$('sz').onchange = e => { size = +e.target.value; };
+
+function setColor(v) {
+  color = v; $('sw').style.background = v; ti.style.color = v;
+  pal.style.display = 'none';
+}
+$('sw').style.background = color;
+COLORS.forEach(v => { const d = document.createElement('i'); d.style.background = v; d.onclick = () => setColor(v); pal.appendChild(d); });
+const hex = document.createElement('input'); hex.placeholder = '#rrggbb'; hex.maxLength = 7;
+hex.onkeydown = e => { e.stopPropagation(); if (e.key === 'Enter' && /^#[0-9a-f]{6}$/i.test(hex.value)) setColor(hex.value); };
+pal.appendChild(hex);
+$('sw').onclick = () => {
+  if (pal.style.display === 'grid') { pal.style.display = 'none'; return; }
+  pal.style.display = 'grid';
+  const r = $('sw').getBoundingClientRect(), h = pal.offsetHeight, w = pal.offsetWidth;
+  pal.style.left = Math.max(4, Math.min(innerWidth - w - 4, r.left)) + 'px';
+  pal.style.top = (r.top - h - 8 > 4 ? r.top - h - 8 : r.bottom + 8) + 'px';
+};
+
 const undo = () => { shapes.pop(); render(); };
 const copy = () => { commitText(); api.copy(exportPNG()); };
 const save = () => { commitText(); api.save(exportPNG()); };

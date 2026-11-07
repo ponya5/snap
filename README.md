@@ -7,7 +7,9 @@ Press a shortcut, drag over any part of the screen, then either annotate and sav
 ## Features
 
 - **Area capture:** press the shortcut, drag to select a region of the screen.
-- **Screenshot mode:** draw on the capture with pen, arrow, rectangle and text in any color, then undo, copy to the clipboard, or save as PNG/JPG.
+- **Screenshot mode:** annotate the capture with pen, highlighter, line, arrow, rectangle, ellipse, text, and a pixelate tool for hiding sensitive info. Pick any color from a palette (or type a hex value) and choose a size (S/M/L/XL) for line width and text. Resize the selection with its handles, then undo, copy to the clipboard, or save as PNG/JPG.
+- **Full screen:** one click captures the whole display.
+- **Tooltips:** hover any button to see what it does.
 - **Video mode:** record the selected area with a 5-second countdown (configurable). Toggle system sound and microphone before you start. A small stop bar with a timer appears outside the recording.
 - **Mode bar:** switch between Screenshot and Video at the top of the capture screen. Snap remembers your last choice.
 - **Settings:** change the shortcut, default save folder, ask-where-to-save or auto-save, screenshot format, countdown length, and default audio toggles.
@@ -83,3 +85,7 @@ Issues and pull requests are welcome, especially Windows testing, signing/notari
 ## License
 
 [MIT](LICENSE) © 2026 Daniel Shalom
+
+## Replacing the built-in macOS screenshot tool
+
+Set Snap's shortcut to `Cmd+Shift+4` in Snap's settings, after disabling the system shortcuts under System Settings > Keyboard > Keyboard Shortcuts > Screenshots. Window capture and the timer from the built-in tool are not implemented.
