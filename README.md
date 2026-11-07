@@ -51,12 +51,17 @@ The DMG is written to `dist/`. The build is unsigned and targets the architectur
 
 Because the app is unsigned, macOS ties the permission to each specific build. After installing a new build you may need to grant it again. On first open, right-click the app and choose Open, or run `xattr -cr /Applications/Snap.app`.
 
+## Status
+
+Early release (v0.1.0). It works as a personal tool but is not production grade: the build is unsigned and not notarized, there is no auto-update, and there are no automated tests. Use at your own risk.
+
 ## Known limitations
 
 - System sound capture uses Electron's loopback audio and should work on macOS 13 or later and on Windows. It has not been tested on every setup.
 - Video records one rectangular area of a single display, with no on-screen outline while recording.
 - No blur tool, upload or share links, or auto-update.
-- Only tested on macOS (Apple Silicon). Windows is untested.
+- Only tested on macOS (Apple Silicon), and not every flow was exercised. Windows and Intel Macs are untested.
+- Not code-signed or notarized, so macOS and Windows SmartScreen will warn on first launch.
 
 ## Project layout
 
@@ -70,3 +75,11 @@ Because the app is unsigned, macOS ties the permission to each specific build. A
 | `countdown.html` | Countdown before recording |
 | `settings.html` | Settings window |
 | `home.html` | Small launcher window |
+
+## Contributing
+
+Issues and pull requests are welcome, especially Windows testing, signing/notarization setup, and automated tests.
+
+## License
+
+[MIT](LICENSE) © 2026 Daniel Shalom

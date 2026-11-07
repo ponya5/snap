@@ -12,7 +12,7 @@
     "electron-builder": "^26.18.0"
   },
   "build": {
-    "appId": "com.example.snap",
+    "appId": "com.ponya5.snap",
     "productName": "Snap",
     "files": [
       "main.js",
@@ -36,5 +36,12 @@
     "win": {
       "target": "nsis"
     }
-  }
+  },
+  "author": "ponya5",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ponya5/snap.git"
+  },
+  "homepage": "https://github.com/ponya5/snap#readme"
 }
