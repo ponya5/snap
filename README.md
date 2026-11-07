@@ -91,7 +91,3 @@ Issues and pull requests are welcome, especially Windows testing, signing/notari
 ## License
 
 [MIT](LICENSE) © 2026 Daniel Shalom
-
-## Replacing the built-in macOS screenshot tool
-
-Set Snap's shortcut to `Cmd+Shift+4` in Snap's settings, after disabling the system shortcuts under System Settings > Keyboard > Keyboard Shortcuts > Screenshots. Window capture and the timer from the built-in tool are not implemented.
