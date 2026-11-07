@@ -1,12 +1,13 @@
 const { app, BrowserWindow, Tray, Menu, globalShortcut, desktopCapturer, screen, ipcMain, clipboard, nativeImage, dialog, session, shell, systemPreferences, Notification } = require('electron');
 const path = require('path');
+const { execFile } = require('child_process');
 const fs = require('fs');
 
 const DEFAULTS = { hotkey: 'CommandOrControl+Shift+S', folder: '', askWhere: true, format: 'png', countdown: 5, sys: true, mic: false, mode: 'shot', videoFormat: 'mp4' };
 const cfgFile = path.join(app.getPath('userData'), 'settings.json');
 let settings = { ...DEFAULTS };
 try { settings = { ...DEFAULTS, ...JSON.parse(fs.readFileSync(cfgFile, 'utf8')) }; } catch (e) {}
-let tray, settingsWin, overlay, overlayDisplay, recorder, control, home, pending;
+let tray, settingsWin, overlay, overlayDisplay, recorder, control, home, pending, frame, pvWin, pv;
 
 const stamp = () => new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
 const webPrefs = { preload: path.join(__dirname, 'preload.js'), backgroundThrottling: false };
@@ -27,7 +28,7 @@ async function sourceFor(display) {
   return null;
 }
 
-async function capture() {
+async function capture(forceMode) {
   if (recorder) return stopRecording();
   if (overlay) return;
   if (home?.isVisible()) { home.hide(); await new Promise(r => setTimeout(r, 250)); }
@@ -44,7 +45,7 @@ async function capture() {
   overlay.setAlwaysOnTop(true, 'screen-saver');
   if (mac) overlay.setSimpleFullScreen(true);
   overlay.loadFile('overlay.html');
-  overlay.webContents.once('did-finish-load', () => overlay.webContents.send('shot', { url: src.thumbnail.toDataURL(), sys: settings.sys, mic: settings.mic, mode: settings.mode }));
+  overlay.webContents.once('did-finish-load', () => overlay.webContents.send('shot', { url: src.thumbnail.toDataURL(), sys: settings.sys, mic: settings.mic, mode: typeof forceMode === 'string' ? forceMode : settings.mode }));
   overlay.on('closed', () => { overlay = null; });
 }
 
@@ -81,6 +82,15 @@ ipcMain.on('rec', async (_e, o) => {
   const src = await sourceFor(d);
   if (!src) return;
   const r = o.region, cb = d.bounds;
+  frame = new BrowserWindow({
+    x: cb.x, y: cb.y, width: cb.width, height: cb.height, frame: false, transparent: true, resizable: false, focusable: false,
+    alwaysOnTop: true, skipTaskbar: true, hasShadow: false, enableLargerThanScreen: true,
+  });
+  frame.setBounds(cb);
+  frame.setIgnoreMouseEvents(true);
+  frame.setContentProtection(true);
+  frame.setAlwaysOnTop(true, 'screen-saver');
+  frame.loadFile('frame.html', { query: { x: String(r.x), y: String(r.y), w: String(r.w), h: String(r.h) } });
   const cd = settings.countdown > 0 && new BrowserWindow({
     x: Math.round(cb.x + r.x + r.w / 2 - 100), y: Math.round(cb.y + r.y + r.h / 2 - 100), width: 200, height: 200,
     frame: false, transparent: true, resizable: false, alwaysOnTop: true, skipTaskbar: true, focusable: false, hasShadow: false,
@@ -112,8 +122,43 @@ function stopRecording() { recorder?.webContents.send('stop'); }
 ipcMain.on('video', async (_e, buf, ext) => {
   recorder.destroy(); recorder = null;
   control?.destroy(); control = null;
+  frame?.destroy(); frame = null;
   menu();
-  await saveTo('videos', `recording-${stamp()}.${ext}`, [{ name: ext.toUpperCase() + ' video', extensions: [ext] }], () => Buffer.from(buf));
+  const file = path.join(app.getPath('temp'), `snap-${stamp()}.${ext}`);
+  fs.writeFileSync(file, Buffer.from(buf));
+  showPreview(file, ext);
+});
+
+// Preview after recording: save, copy, re-record or discard.
+function showPreview(file, ext) {
+  pv = { file, ext };
+  pvWin = new BrowserWindow({ width: 860, height: 620, title: 'Recording preview', webPreferences: webPrefs });
+  pvWin.setMenuBarVisibility(false);
+  pvWin.loadFile('preview.html', { query: { f: file } });
+  pvWin.on('closed', () => { pvWin = null; pv = null; }); // closing with the window button keeps the temp file
+}
+function endPreview(deleteFile) {
+  const f = pv?.file;
+  const w = pvWin; pvWin = null; pv = null;
+  w?.destroy();
+  if (deleteFile && f) fs.rm(f, { force: true }, () => {});
+}
+ipcMain.handle('pv', async (_e, action) => {
+  if (!pv) return false;
+  const { file, ext } = pv;
+  if (action === 'save') {
+    const ok = await saveTo('videos', `recording-${stamp()}.${ext}`, [{ name: ext.toUpperCase() + ' video', extensions: [ext] }], () => fs.readFileSync(file));
+    if (ok) endPreview(true);
+    return ok;
+  }
+  if (action === 'copy') {
+    const args = process.platform === 'darwin' ? ['osascript', ['-e', `set the clipboard to (POSIX file "${file}")`]]
+      : ['powershell', ['-NoProfile', '-Command', `Set-Clipboard -Path '${file}'`]];
+    return new Promise(res => execFile(args[0], args[1], err => res(!err)));
+  }
+  endPreview(true);
+  if (action === 'redo') setTimeout(() => capture('video'), 300);
+  return true;
 });
 
 ipcMain.on('cmd', (_e, c) => {

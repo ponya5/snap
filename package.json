@@ -23,7 +23,9 @@
       "control.html",
       "icon.png",
       "countdown.html",
-      "settings.html"
+      "settings.html",
+      "frame.html",
+      "preview.html"
     ],
     "mac": {
       "category": "public.app-category.graphics-design",

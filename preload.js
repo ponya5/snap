@@ -6,6 +6,7 @@ contextBridge.exposeInMainWorld('api', {
   save: url => ipc.send('save', url),
   rec: o => ipc.send('rec', o),
   mode: m => ipc.send('mode', m),
+  pv: a => ipc.invoke('pv', a),
   cmd: c => ipc.send('cmd', c),
   close: () => ipc.send('close'),
   onStart: f => ipc.on('start', (_e, id) => f(id)),

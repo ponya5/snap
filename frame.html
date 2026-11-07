@@ -1,0 +1,10 @@
+<!doctype html><meta charset="utf-8">
+<style>
+  html, body { margin: 0; height: 100%; background: transparent; overflow: hidden; }
+  #f { position: fixed; box-sizing: border-box; border: 3px solid #ff3b30; border-radius: 3px; box-shadow: 0 0 0 1px #fff8; }
+</style>
+<div id="f"></div>
+<script>
+const q = new URLSearchParams(location.search), n = k => +q.get(k), f = document.getElementById('f');
+Object.assign(f.style, { left: n('x') - 3 + 'px', top: n('y') - 3 + 'px', width: n('w') + 6 + 'px', height: n('h') + 6 + 'px' });
+</script>

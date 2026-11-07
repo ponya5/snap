@@ -1,0 +1,28 @@
+<!doctype html>
+<meta charset="utf-8">
+<style>
+  html, body { margin: 0; height: 100%; background: #1e1e1e; color: #eee; font: 14px system-ui; display: flex; flex-direction: column; }
+  video { flex: 1; min-height: 0; width: 100%; background: #000; }
+  #bar { display: flex; gap: 8px; padding: 12px; justify-content: center; align-items: center; }
+  button { border: 0; border-radius: 6px; padding: 10px 18px; font-size: 14px; cursor: pointer; background: #444; color: #fff; }
+  button:hover { filter: brightness(1.2); }
+  #save { background: #2d7ff9; } #discard { background: #d93a3a; }
+  #msg { color: #7c7; min-width: 90px; }
+</style>
+<video id="v" controls autoplay></video>
+<div id="bar">
+  <button id="save" title="Save the video to a file">💾 Save</button>
+  <button id="copy" title="Copy the video file to the clipboard so you can paste it">📋 Copy</button>
+  <button id="redo" title="Throw this away and record again">🔄 Record again</button>
+  <button id="discard" title="Delete this recording">🗑 Discard</button>
+  <span id="msg"></span>
+</div>
+<script>
+const f = new URLSearchParams(location.search).get('f');
+document.getElementById('v').src = 'file://' + encodeURI(f);
+const $ = id => document.getElementById(id);
+$('save').onclick = () => api.pv('save');
+$('redo').onclick = () => api.pv('redo');
+$('discard').onclick = () => api.pv('discard');
+$('copy').onclick = async () => { const ok = await api.pv('copy'); $('msg').style.color = ok ? '#7c7' : '#f77'; $('msg').textContent = ok ? 'Copied ✓' : 'Copy failed'; setTimeout(() => $('msg').textContent = '', 2000); };
+</script>
