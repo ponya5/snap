@@ -1,6 +1,8 @@
 # Snap
 
-A Lightshot-style screenshot and screen recorder for macOS and Windows, built with Electron.
+A simple, intuitive screenshot and screen recorder for macOS and Windows, built with Electron.
+
+I wanted an app of my own that makes taking a screenshot or a quick video while using my machine simple and fast, without extra steps or clutter.
 
 Press a shortcut, drag over any part of the screen, then either annotate and save a screenshot or record that area as video.
 
