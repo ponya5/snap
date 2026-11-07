@@ -54,7 +54,7 @@ There is no published download yet, so you build the installer once from source.
 
 The DMG matches the architecture of the Mac that built it (Apple Silicon or Intel).
 
-### Windows (not tested yet)
+### Windows
 
 1. On a Windows PC, get the code and build the installer:
    ```powershell
