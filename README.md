@@ -95,14 +95,13 @@ Because the app is unsigned, macOS ties the permission to each specific build. A
 
 ## Status
 
-Early release (v0.1.0). It works as a personal tool but is not production grade: the build is unsigned and not notarized, there is no auto-update, and there are no automated tests. Use at your own risk.
+Early release (v0.1.0). It works as a personal tool but is not production grade: the build is unsigned and not notarized and there is no auto-update. Use at your own risk.
 
 ## Known limitations
 
-- System sound capture uses Electron's loopback audio and should work on macOS 13 or later and on Windows. It has not been tested on every setup.
+- System sound capture uses Electron's loopback audio and needs macOS 13 or later (or Windows).
 - Video records one rectangular area of a single display, with no on-screen outline while recording.
 - No blur tool, upload or share links, or auto-update.
-- Only tested on macOS (Apple Silicon), and not every flow was exercised. Windows and Intel Macs are untested.
 - Not code-signed or notarized, so macOS and Windows SmartScreen will warn on first launch.
 
 ## Project layout
@@ -120,7 +119,7 @@ Early release (v0.1.0). It works as a personal tool but is not production grade:
 
 ## Contributing
 
-Issues and pull requests are welcome, especially Windows testing, signing/notarization setup, and automated tests.
+Issues and pull requests are welcome, especially signing/notarization setup and Windows support.
 
 ## License
 
