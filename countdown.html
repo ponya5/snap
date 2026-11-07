@@ -1,0 +1,10 @@
+<!doctype html><meta charset="utf-8">
+<style>
+  html, body { margin: 0; height: 100%; background: transparent; display: flex; align-items: center; justify-content: center; }
+  #n { width: 140px; height: 140px; border-radius: 50%; background: #000b; color: #fff; font: bold 84px system-ui; display: flex; align-items: center; justify-content: center; }
+</style>
+<div id="n"></div>
+<script>
+let n = +new URLSearchParams(location.search).get('n') || 5; const el = document.getElementById('n'); el.textContent = n;
+setInterval(() => { if (n > 1) el.textContent = --n; }, 1000);
+</script>

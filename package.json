@@ -1,0 +1,40 @@
+{
+  "name": "snap",
+  "version": "0.1.0",
+  "description": "Lightshot-style screenshot + screen recorder for Windows and macOS",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --mac dmg"
+  },
+  "devDependencies": {
+    "electron": "^33.0.0",
+    "electron-builder": "^26.18.0"
+  },
+  "build": {
+    "appId": "com.example.snap",
+    "productName": "Snap",
+    "files": [
+      "main.js",
+      "preload.js",
+      "overlay.html",
+      "recorder.html",
+      "home.html",
+      "control.html",
+      "icon.png",
+      "countdown.html",
+      "settings.html"
+    ],
+    "mac": {
+      "category": "public.app-category.graphics-design",
+      "identity": null,
+      "extendInfo": {
+        "NSScreenCaptureUsageDescription": "Snap captures your screen for screenshots and recordings.",
+        "NSMicrophoneUsageDescription": "Snap can record your microphone in screen recordings."
+      }
+    },
+    "win": {
+      "target": "nsis"
+    }
+  }
+}

@@ -1,0 +1,168 @@
+<!doctype html>
+<meta charset="utf-8">
+<style>
+  html, body { margin: 0; overflow: hidden; cursor: crosshair; user-select: none; font: 13px system-ui; background: #000; }
+  canvas { position: fixed; inset: 0; width: 100%; height: 100%; }
+  #bar, #vbar { position: fixed; display: none; gap: 4px; padding: 4px; background: #222; border-radius: 6px; box-shadow: 0 2px 8px #0008; cursor: default; align-items: center; }
+  #bar button, #vbar button, #pick button { background: #444; color: #fff; border: 0; border-radius: 4px; padding: 6px 10px; cursor: pointer; font-size: 13px; }
+  #bar button:hover, #vbar button:hover, #pick button:hover { background: #666; }
+  #bar button.on { background: #2d7ff9; }
+  #col { width: 30px; height: 28px; border: 0; padding: 0; background: none; }
+  #vbar label { color: #fff; padding: 0 8px; cursor: pointer; display: flex; gap: 4px; align-items: center; }
+  #vbar .rec { background: #d93a3a; }
+  #pick { position: fixed; top: 16px; left: 50%; transform: translateX(-50%); display: flex; gap: 4px; padding: 4px; background: #222; border-radius: 8px; box-shadow: 0 2px 8px #0008; cursor: default; }
+  #pick button { font-size: 14px; padding: 8px 16px; }
+  #pick button.on { background: #2d7ff9; }
+  #hint { position: fixed; top: 72px; left: 50%; transform: translateX(-50%); color: #fff; background: #000a; padding: 8px 14px; border-radius: 6px; display: none; pointer-events: none; }
+  #ti { position: fixed; display: none; font: bold 20px system-ui; background: transparent; border: 1px dashed #fff; outline: 0; padding: 0; min-width: 80px; }
+</style>
+<canvas id="c"></canvas>
+<input id="ti">
+<div id="pick"><button data-m="shot">📷 Screenshot</button><button data-m="video">🎥 Video</button><button id="cfg">⚙️</button></div>
+<div id="hint" style="display:block">Drag to select an area · Esc to cancel</div>
+<div id="vbar">
+  <label><input type="checkbox" id="sys" checked> System sound</label>
+  <label><input type="checkbox" id="mic"> Microphone</label>
+  <button id="go" class="rec">⏺ Start recording</button>
+  <button id="vx">✕</button>
+</div>
+<div id="bar">
+  <button data-t="pen" class="on" title="Pen">✏️</button>
+  <button data-t="arrow" title="Arrow">➜</button>
+  <button data-t="rect" title="Rectangle">▭</button>
+  <button data-t="text" title="Text">T</button>
+  <input id="col" type="color" value="#ff2d2d" title="Color">
+  <button id="undo" title="Undo (Ctrl/Cmd+Z)">↶</button>
+  <button id="copy" title="Copy (Ctrl/Cmd+C)">Copy</button>
+  <button id="save" title="Save (Ctrl/Cmd+S)">Save</button>
+  <button id="x" title="Close (Esc)">✕</button>
+</div>
+<script>
+const $ = id => document.getElementById(id);
+const c = $('c'), g = c.getContext('2d'), bar = $('bar'), ti = $('ti');
+const dpr = devicePixelRatio;
+let mode = null, img, S = 1, sel = null, start = null, editing = false, shapes = [], cur = null, tool = 'pen', color = '#ff2d2d';
+
+function setMode(m, user) {
+  mode = m;
+  document.querySelectorAll('[data-m]').forEach(b => b.classList.toggle('on', b.dataset.m === m));
+  if (user) api.mode(m);
+  if (editing) { bar.style.display = 'none'; $('vbar').style.display = 'none'; place(m === 'shot' ? bar : $('vbar')); }
+}
+document.querySelectorAll('[data-m]').forEach(b => b.onclick = () => setMode(b.dataset.m, true));
+api.onShot(({ url, mode: m, sys, mic }) => {
+  $('sys').checked = sys; $('mic').checked = mic;
+  img = new Image();
+  img.onload = () => { c.width = innerWidth * dpr; c.height = innerHeight * dpr; S = img.width / innerWidth; render(); };
+  img.src = url;
+  setMode(m || 'shot');
+});
+
+function draw(k, s) {
+  k.strokeStyle = k.fillStyle = s.c; k.lineWidth = 3; k.lineCap = k.lineJoin = 'round';
+  if (s.t === 'pen') { k.beginPath(); s.p.forEach(([a, b], i) => i ? k.lineTo(a, b) : k.moveTo(a, b)); k.stroke(); }
+  else if (s.t === 'rect') k.strokeRect(s.x, s.y, s.w, s.h);
+  else if (s.t === 'arrow') {
+    const a = Math.atan2(s.y2 - s.y, s.x2 - s.x);
+    k.beginPath(); k.moveTo(s.x, s.y); k.lineTo(s.x2, s.y2); k.stroke();
+    k.beginPath(); k.moveTo(s.x2, s.y2);
+    for (const d of [2.6, -2.6]) k.lineTo(s.x2 + 14 * Math.cos(a + d), s.y2 + 14 * Math.sin(a + d));
+    k.closePath(); k.fill();
+  } else if (s.t === 'text') { k.font = 'bold 20px system-ui'; k.textBaseline = 'top'; k.fillText(s.s, s.x, s.y); }
+}
+
+function render() {
+  g.setTransform(dpr, 0, 0, dpr, 0, 0);
+  g.drawImage(img, 0, 0, innerWidth, innerHeight);
+  g.fillStyle = '#0008';
+  if (!sel) return g.fillRect(0, 0, innerWidth, innerHeight);
+  const { x, y, w, h } = sel;
+  g.fillRect(0, 0, innerWidth, y); g.fillRect(0, y + h, innerWidth, innerHeight - y - h);
+  g.fillRect(0, y, x, h); g.fillRect(x + w, y, innerWidth - x - w, h);
+  g.strokeStyle = '#2d7ff9'; g.lineWidth = 1; g.strokeRect(x + .5, y + .5, w, h);
+  g.save(); g.beginPath(); g.rect(x, y, w, h); g.clip();
+  [...shapes, cur].forEach(s => s && draw(g, s));
+  g.restore();
+}
+
+function exportPNG() {
+  const o = document.createElement('canvas');
+  o.width = Math.round(sel.w * S); o.height = Math.round(sel.h * S);
+  const k = o.getContext('2d');
+  k.drawImage(img, sel.x * S, sel.y * S, sel.w * S, sel.h * S, 0, 0, o.width, o.height);
+  k.scale(S, S); k.translate(-sel.x, -sel.y);
+  shapes.forEach(s => draw(k, s));
+  return o.toDataURL('image/png');
+}
+
+const inSel = e => e.clientX >= sel.x && e.clientX <= sel.x + sel.w && e.clientY >= sel.y && e.clientY <= sel.y + sel.h;
+const rect = (e) => ({ x: Math.min(start.x, e.clientX), y: Math.min(start.y, e.clientY), w: Math.abs(e.clientX - start.x), h: Math.abs(e.clientY - start.y) });
+
+function commitText() {
+  if (ti.style.display === 'block' && ti.value) shapes.push({ t: 'text', x: parseFloat(ti.style.left), y: parseFloat(ti.style.top), s: ti.value, c: color });
+  ti.style.display = 'none'; ti.value = ''; render();
+}
+
+addEventListener('mousedown', e => {
+  if (e.target.closest('#bar, #vbar, #pick') || e.target === ti) return;
+  commitText();
+  if (!editing) { start = { x: e.clientX, y: e.clientY }; sel = null; return; }
+  if (!inSel(e)) return;
+  start = { x: e.clientX, y: e.clientY };
+  if (tool === 'text') { Object.assign(ti.style, { display: 'block', left: start.x + 'px', top: start.y + 'px', color }); setTimeout(() => ti.focus()); start = null; return; }
+  cur = tool === 'pen' ? { t: 'pen', c: color, p: [[start.x, start.y]] }
+    : tool === 'rect' ? { t: 'rect', c: color, x: start.x, y: start.y, w: 0, h: 0 }
+    : { t: 'arrow', c: color, x: start.x, y: start.y, x2: start.x, y2: start.y };
+});
+
+addEventListener('mousemove', e => {
+  if (!start) return;
+  if (!editing) sel = rect(e);
+  else if (cur) {
+    if (cur.t === 'pen') cur.p.push([e.clientX, e.clientY]);
+    else if (cur.t === 'rect') { cur.w = e.clientX - cur.x; cur.h = e.clientY - cur.y; }
+    else { cur.x2 = e.clientX; cur.y2 = e.clientY; }
+  }
+  render();
+});
+
+addEventListener('mouseup', () => {
+  if (!start) return;
+  if (!editing) {
+    if (sel && sel.w > 5 && sel.h > 5) { editing = true; document.body.style.cursor = 'default'; $('hint').style.display = 'none'; place(mode === 'shot' ? bar : $('vbar')); }
+    else sel = null;
+  } else if (cur) { shapes.push(cur); cur = null; }
+  start = null; render();
+});
+
+function place(el) {
+  el.style.display = 'flex';
+  const w = el.offsetWidth, h = el.offsetHeight;
+  el.style.left = Math.max(4, Math.min(innerWidth - w - 4, sel.x + sel.w - w)) + 'px';
+  const below = sel.y + sel.h + 8;
+  el.style.top = (below + h < innerHeight ? below : Math.max(4, sel.y + sel.h - h - 8)) + 'px';
+}
+$('cfg').onclick = () => { api.close(); api.cmd('settings'); };
+$('go').onclick = () => api.rec({ region: sel, dw: innerWidth, sys: $('sys').checked, mic: $('mic').checked });
+$('vx').onclick = () => api.close();
+
+document.querySelectorAll('[data-t]').forEach(b => b.onclick = () => {
+  tool = b.dataset.t;
+  document.querySelectorAll('[data-t]').forEach(o => o.classList.toggle('on', o === b));
+});
+$('col').oninput = e => { color = e.target.value; };
+const undo = () => { shapes.pop(); render(); };
+const copy = () => { commitText(); api.copy(exportPNG()); };
+const save = () => { commitText(); api.save(exportPNG()); };
+$('undo').onclick = undo; $('copy').onclick = copy; $('save').onclick = save; $('x').onclick = () => api.close();
+
+ti.addEventListener('keydown', e => { if (e.key === 'Enter') commitText(); e.stopPropagation(); });
+addEventListener('keydown', e => {
+  const m = e.ctrlKey || e.metaKey;
+  if (e.key === 'Escape') api.close();
+  else if (!editing || mode !== 'shot') return;
+  else if (m && e.key === 'c') copy();
+  else if (m && e.key === 's') { e.preventDefault(); save(); }
+  else if (m && e.key === 'z') undo();
+});
+</script>
