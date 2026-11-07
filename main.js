@@ -222,6 +222,12 @@ function menu() {
   tray.setToolTip(recorder ? 'Snap (recording...)' : 'Snap');
 }
 
+// Windows size themselves to their content so nothing needs scrolling.
+ipcMain.on('fit', (e, h) => {
+  const w = BrowserWindow.fromWebContents(e.sender);
+  if (w) w.setContentSize(w.getContentSize()[0], Math.ceil(h));
+});
+
 function showHome() {
   if (home) return home.show();
   home = new BrowserWindow({ width: 340, height: 220, resizable: false, title: 'Snap', webPreferences: webPrefs });

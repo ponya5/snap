@@ -8,6 +8,7 @@ contextBridge.exposeInMainWorld('api', {
   mode: m => ipc.send('mode', m),
   pv: a => ipc.invoke('pv', a),
   onFx: f => ipc.on('fx', () => f()),
+  fit: h => ipc.send('fit', h),
   cmd: c => ipc.send('cmd', c),
   close: () => ipc.send('close'),
   onStart: f => ipc.on('start', (_e, id) => f(id)),

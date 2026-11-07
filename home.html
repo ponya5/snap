@@ -10,4 +10,5 @@
 <button onclick="api.cmd('shot')">📷 Screenshot</button>
 <button onclick="api.cmd('video')" style="margin-top:8px;background:#d93a3a">🎥 Record video</button>
 <button onclick="api.cmd('settings')" style="margin-top:8px;background:#444">Settings</button>
-<p>Choose screenshot or video, then drag to select an area.<br>Closing this window keeps Snap running in the tray.</p>
+<p>Choose screenshot or video, then drag to select an area.<br>Shortcuts can be changed in Settings.<br>Closing this window keeps Snap running in the tray.</p>
+<script>window.addEventListener('load', () => api.fit(document.body.getBoundingClientRect().height));</script>
