@@ -63,7 +63,7 @@ const c = $('c'), g = c.getContext('2d'), bar = $('bar'), ti = $('ti'), pal = $(
 const dpr = devicePixelRatio;
 const WIDTHS = [2, 4, 7, 12], FONTS = [16, 24, 36, 54];
 const COLORS = ['#ff2d2d', '#ff8a00', '#ffd400', '#2ecc40', '#00c2ff', '#2d7ff9', '#8a4dff', '#ff4da6', '#000000', '#7f7f7f', '#ffffff', '#8b5a2b'];
-let mode = null, img, S = 1, sel = null, start = null, editing = false, shapes = [], cur = null;
+let fx = {}, mode = null, img, S = 1, sel = null, start = null, editing = false, shapes = [], cur = null;
 let tool = 'pen', color = COLORS[0], size = 1, resizing = null;
 
 // ---- tooltips (native title tooltips are unreliable in this overlay)
@@ -79,6 +79,28 @@ addEventListener('mouseover', e => {
 });
 addEventListener('mousedown', () => { tip.style.display = 'none'; });
 
+// ---- capture feedback: flash over the captured area + camera shutter sound
+function shutter() {
+  const ctx = new AudioContext(), t = ctx.currentTime;
+  for (const [dt, dur, hz] of [[0, .03, 3200], [.075, .06, 1700]]) {
+    const n = Math.floor(ctx.sampleRate * dur), buf = ctx.createBuffer(1, n, ctx.sampleRate), d = buf.getChannelData(0);
+    for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / n, 3);
+    const src = ctx.createBufferSource(), bp = ctx.createBiquadFilter(), gain = ctx.createGain();
+    src.buffer = buf; bp.type = 'bandpass'; bp.frequency.value = hz; gain.gain.value = 1.2;
+    src.connect(bp); bp.connect(gain); gain.connect(ctx.destination); src.start(t + dt);
+  }
+}
+api.onFx(() => {
+  bar.style.display = 'none'; pal.style.display = 'none'; $('pick').style.display = 'none';
+  if (fx.flash && sel) {
+    const f = document.createElement('div');
+    Object.assign(f.style, { position: 'fixed', left: sel.x + 'px', top: sel.y + 'px', width: sel.w + 'px', height: sel.h + 'px', background: '#fff', opacity: '.95', transition: 'opacity 360ms ease-out', pointerEvents: 'none', zIndex: 20 });
+    document.body.appendChild(f);
+    requestAnimationFrame(() => requestAnimationFrame(() => { f.style.opacity = '0'; }));
+  }
+  if (fx.sound) shutter();
+});
+
 // ---- mode / setup
 function setMode(m, user) {
   mode = m;
@@ -87,7 +109,8 @@ function setMode(m, user) {
   if (editing) { bar.style.display = 'none'; $('vbar').style.display = 'none'; place(m === 'shot' ? bar : $('vbar')); }
 }
 document.querySelectorAll('[data-m]').forEach(b => b.onclick = () => setMode(b.dataset.m, true));
-api.onShot(({ url, mode: m, sys, mic, fixed }) => {
+api.onShot(({ url, mode: m, sys, mic, fixed, flash, sound }) => {
+  fx = { flash, sound };
   if (fixed) {
     document.querySelectorAll('[data-m]').forEach(b => b.style.display = 'none');
     $('hint').textContent = (m === 'video' ? 'Drag to select the area to record' : 'Drag to select an area to capture') + ' · Esc to cancel';

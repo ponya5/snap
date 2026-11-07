@@ -20,6 +20,8 @@
   <span><input id="folder" type="text" readonly placeholder="Default"> <button class="g" id="pick">Browse</button></span></div>
 <div class="row"><span>Ask where to save each time</span><input id="ask" type="checkbox"></div>
 <div class="row"><span>Screenshot format</span><select id="format"><option value="png">PNG</option><option value="jpg">JPG</option></select></div>
+<div class="row"><span>Flash when a screenshot is taken</span><input id="flash" type="checkbox"></div>
+<div class="row"><span>Camera sound when a screenshot is taken</span><input id="sound" type="checkbox"></div>
 <div class="row"><span>Video format</span><select id="vformat"><option value="mp4">MP4 (plays everywhere)</option><option value="webm">WebM</option></select></div>
 <div class="row"><span>Video countdown (seconds, 0 = none)</span><input id="countdown" type="number" min="0" max="10" style="width:60px"></div>
 <div class="row"><span>Record system sound by default</span><input id="sys" type="checkbox"></div>
@@ -35,7 +37,7 @@ const KEYS = { ' ': 'Space', ArrowUp: 'Up', ArrowDown: 'Down', ArrowLeft: 'Left'
 function load(s) { for (const k in keys) { keys[k] = s[k]; $(k).value = show(s[k]); } }
 api.settings.get().then(s => {
   load(s);
-  $('folder').value = s.folder; $('ask').checked = s.askWhere; $('format').value = s.format; $('vformat').value = s.videoFormat;
+  $('folder').value = s.folder; $('ask').checked = s.askWhere; $('format').value = s.format; $('vformat').value = s.videoFormat; $('flash').checked = s.flash; $('sound').checked = s.sound;
   $('countdown').value = s.countdown; $('sys').checked = s.sys; $('mic').checked = s.mic;
 });
 
@@ -55,7 +57,7 @@ for (const k in keys) {
 $('pick').onclick = async () => { const f = await api.settings.pick(); if (f) $('folder').value = f; };
 $('save').onclick = async () => {
   const r = await api.settings.set({
-    hotkey: keys.hotkey, videoHotkey: keys.videoHotkey, folder: $('folder').value, askWhere: $('ask').checked, format: $('format').value, videoFormat: $('vformat').value,
+    hotkey: keys.hotkey, videoHotkey: keys.videoHotkey, folder: $('folder').value, askWhere: $('ask').checked, format: $('format').value, videoFormat: $('vformat').value, flash: $('flash').checked, sound: $('sound').checked,
     countdown: Math.max(0, Math.min(10, +$('countdown').value || 0)), sys: $('sys').checked, mic: $('mic').checked,
   });
   if (r.error) { $('msg').textContent = r.error; api.settings.get().then(load); }

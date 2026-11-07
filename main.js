@@ -3,7 +3,7 @@ const path = require('path');
 const { execFile } = require('child_process');
 const fs = require('fs');
 
-const DEFAULTS = { hotkey: 'CommandOrControl+Shift+S', videoHotkey: 'CommandOrControl+Shift+R', folder: '', askWhere: true, format: 'png', countdown: 5, sys: true, mic: false, mode: 'shot', videoFormat: 'mp4' };
+const DEFAULTS = { flash: true, sound: true, hotkey: 'CommandOrControl+Shift+S', videoHotkey: 'CommandOrControl+Shift+R', folder: '', askWhere: true, format: 'png', countdown: 5, sys: true, mic: false, mode: 'shot', videoFormat: 'mp4' };
 const cfgFile = path.join(app.getPath('userData'), 'settings.json');
 let settings = { ...DEFAULTS };
 try { settings = { ...DEFAULTS, ...JSON.parse(fs.readFileSync(cfgFile, 'utf8')) }; } catch (e) {}
@@ -45,11 +45,16 @@ async function capture(forceMode, fixed) {
   overlay.setAlwaysOnTop(true, 'screen-saver');
   if (mac) overlay.setSimpleFullScreen(true);
   overlay.loadFile('overlay.html');
-  overlay.webContents.once('did-finish-load', () => overlay.webContents.send('shot', { url: src.thumbnail.toDataURL(), sys: settings.sys, mic: settings.mic, mode: typeof forceMode === 'string' ? forceMode : settings.mode, fixed: fixed === true }));
+  overlay.webContents.once('did-finish-load', () => overlay.webContents.send('shot', { url: src.thumbnail.toDataURL(), sys: settings.sys, mic: settings.mic, mode: typeof forceMode === 'string' ? forceMode : settings.mode, fixed: fixed === true, flash: settings.flash, sound: settings.sound }));
   overlay.on('closed', () => { overlay = null; });
 }
 
-ipcMain.on('copy', (_e, url) => { clipboard.writeImage(nativeImage.createFromDataURL(url)); overlay?.close(); });
+// Flash + shutter sound on the captured area, then close the overlay.
+async function finish() {
+  if (overlay && (settings.flash || settings.sound)) { overlay.webContents.send('fx'); await new Promise(r => setTimeout(r, 420)); }
+  overlay?.close();
+}
+ipcMain.on('copy', async (_e, url) => { clipboard.writeImage(nativeImage.createFromDataURL(url)); await finish(); });
 ipcMain.on('close', () => overlay?.close());
 async function saveTo(kind, name, filters, data) {
   const dir = settings.folder || app.getPath(kind);
@@ -71,7 +76,8 @@ ipcMain.on('save', async (_e, url) => {
   const img = nativeImage.createFromDataURL(url);
   const ok = await saveTo('pictures', `screenshot-${stamp()}.${settings.format}`, [{ name: 'Image', extensions: ['png', 'jpg'] }],
     file => (/\.jpe?g$/i.test(file) ? img.toJPEG(92) : img.toPNG()));
-  if (ok) overlay.close(); else overlay.show();
+  overlay.show();
+  if (ok) await finish();
 });
 
 // Video: overlay sends region + audio options, then we record the display and crop in the recorder window.
@@ -194,7 +200,7 @@ ipcMain.handle('s:set', (_e, n) => {
 
 function showSettings() {
   if (settingsWin) return settingsWin.show();
-  settingsWin = new BrowserWindow({ width: 440, height: 520, resizable: false, title: 'Snap Settings', webPreferences: webPrefs });
+  settingsWin = new BrowserWindow({ width: 440, height: 600, resizable: false, title: 'Snap Settings', webPreferences: webPrefs });
   settingsWin.setMenuBarVisibility(false);
   settingsWin.loadFile('settings.html');
   settingsWin.on('closed', () => { settingsWin = null; });

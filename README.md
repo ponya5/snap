@@ -14,6 +14,7 @@ Press a shortcut, drag over any part of the screen, then either annotate and sav
 
 - **Area capture:** press the shortcut, drag to select a region of the screen.
 - **Screenshot mode:** annotate the capture with pen, highlighter, line, arrow, rectangle, ellipse, text, and a pixelate tool for hiding sensitive info. Pick any color from a palette (or type a hex value) and choose a size (S/M/L/XL) for line width and text. Resize the selection with its handles, then undo, copy to the clipboard, or save as PNG/JPG.
+- **Capture feedback:** a white flash over the captured area and a camera shutter sound confirm the screenshot. Both can be turned off in Settings.
 - **Full screen:** one click captures the whole display.
 - **Tooltips:** hover any button to see what it does.
 - **Video mode:** record the selected area with a 5-second countdown (configurable). Toggle system sound and microphone before you start. A small stop bar with a timer appears outside the recording.
