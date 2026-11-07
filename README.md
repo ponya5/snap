@@ -1,4 +1,8 @@
-# Snap
+<p align="center">
+  <img src="icon.png" alt="Snap logo" width="160">
+</p>
+
+<h1 align="center">Snap</h1>
 
 A simple, intuitive screenshot and screen recorder for macOS and Windows, built with Electron.
 
