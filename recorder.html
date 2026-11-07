@@ -25,7 +25,7 @@ api.onStart(async o => {
 
   const out = cv.captureStream(30);
   if (hasAudio) dest.stream.getAudioTracks().forEach(t => out.addTrack(t));
-  const mp4 = MediaRecorder.isTypeSupported('video/mp4;codecs=avc1,mp4a.40.2');
+  const mp4 = o.format !== 'webm' && MediaRecorder.isTypeSupported('video/mp4;codecs=avc1,mp4a.40.2');
   const rec = new MediaRecorder(out, { mimeType: mp4 ? 'video/mp4;codecs=avc1,mp4a.40.2' : 'video/webm', videoBitsPerSecond: 8e6 });
   const chunks = [];
   rec.ondataavailable = e => chunks.push(e.data);

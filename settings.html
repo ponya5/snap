@@ -19,6 +19,7 @@
   <span><input id="folder" type="text" readonly placeholder="Default"> <button class="g" id="pick">Browse</button></span></div>
 <div class="row"><span>Ask where to save each time</span><input id="ask" type="checkbox"></div>
 <div class="row"><span>Screenshot format</span><select id="format"><option value="png">PNG</option><option value="jpg">JPG</option></select></div>
+<div class="row"><span>Video format</span><select id="vformat"><option value="mp4">MP4 (plays everywhere)</option><option value="webm">WebM</option></select></div>
 <div class="row"><span>Video countdown (seconds, 0 = none)</span><input id="countdown" type="number" min="0" max="10" style="width:60px"></div>
 <div class="row"><span>Record system sound by default</span><input id="sys" type="checkbox"></div>
 <div class="row"><span>Record microphone by default</span><input id="mic" type="checkbox"></div>
@@ -32,7 +33,7 @@ const KEYS = { ' ': 'Space', ArrowUp: 'Up', ArrowDown: 'Down', ArrowLeft: 'Left'
 
 api.settings.get().then(s => {
   hotkey = s.hotkey; $('hotkey').value = show(hotkey);
-  $('folder').value = s.folder; $('ask').checked = s.askWhere; $('format').value = s.format;
+  $('folder').value = s.folder; $('ask').checked = s.askWhere; $('format').value = s.format; $('vformat').value = s.videoFormat;
   $('countdown').value = s.countdown; $('sys').checked = s.sys; $('mic').checked = s.mic;
 });
 
@@ -49,10 +50,10 @@ $('hotkey').onkeydown = e => {
 $('pick').onclick = async () => { const f = await api.settings.pick(); if (f) $('folder').value = f; };
 $('save').onclick = async () => {
   const r = await api.settings.set({
-    hotkey, folder: $('folder').value, askWhere: $('ask').checked, format: $('format').value,
+    hotkey, folder: $('folder').value, askWhere: $('ask').checked, format: $('format').value, videoFormat: $('vformat').value,
     countdown: Math.max(0, Math.min(10, +$('countdown').value || 0)), sys: $('sys').checked, mic: $('mic').checked,
   });
   if (r.error) { $('msg').textContent = r.error; api.settings.get().then(s => { hotkey = s.hotkey; $('hotkey').value = show(hotkey); }); }
-  else { $('msg').style.color = '#7c7'; $('msg').textContent = 'Saved'; setTimeout(() => { $('msg').textContent = ''; $('msg').style.color = '#f77'; }, 1500); }
+  else api.cmd('closeSettings');
 };
 </script>

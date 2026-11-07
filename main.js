@@ -2,7 +2,7 @@ const { app, BrowserWindow, Tray, Menu, globalShortcut, desktopCapturer, screen,
 const path = require('path');
 const fs = require('fs');
 
-const DEFAULTS = { hotkey: 'CommandOrControl+Shift+S', folder: '', askWhere: true, format: 'png', countdown: 5, sys: true, mic: false, mode: 'shot' };
+const DEFAULTS = { hotkey: 'CommandOrControl+Shift+S', folder: '', askWhere: true, format: 'png', countdown: 5, sys: true, mic: false, mode: 'shot', videoFormat: 'mp4' };
 const cfgFile = path.join(app.getPath('userData'), 'settings.json');
 let settings = { ...DEFAULTS };
 try { settings = { ...DEFAULTS, ...JSON.parse(fs.readFileSync(cfgFile, 'utf8')) }; } catch (e) {}
@@ -92,7 +92,7 @@ ipcMain.on('rec', async (_e, o) => {
   pending = { video: src, audio: o.sys ? 'loopback' : undefined };
   recorder = new BrowserWindow({ show: false, webPreferences: webPrefs });
   recorder.loadFile('recorder.html');
-  recorder.webContents.once('did-finish-load', () => recorder.webContents.send('start', { ...o, id: src.id }));
+  recorder.webContents.once('did-finish-load', () => recorder.webContents.send('start', { ...o, id: src.id, format: settings.videoFormat }));
 
   // Stop bar, placed outside the region and hidden from capture.
   const b = d.bounds, h = 44, w = 220;
@@ -144,12 +144,15 @@ ipcMain.handle('s:set', (_e, n) => {
 
 function showSettings() {
   if (settingsWin) return settingsWin.show();
-  settingsWin = new BrowserWindow({ width: 440, height: 470, resizable: false, title: 'Snap Settings', webPreferences: webPrefs });
+  settingsWin = new BrowserWindow({ width: 440, height: 520, resizable: false, title: 'Snap Settings', webPreferences: webPrefs });
   settingsWin.setMenuBarVisibility(false);
   settingsWin.loadFile('settings.html');
   settingsWin.on('closed', () => { settingsWin = null; });
 }
-ipcMain.on('cmd', (_e, c) => { if (c === 'settings') showSettings(); });
+ipcMain.on('cmd', (_e, c) => {
+  if (c === 'settings') showSettings();
+  if (c === 'closeSettings') settingsWin?.close();
+});
 
 function menu() {
   tray.setContextMenu(Menu.buildFromTemplate([
