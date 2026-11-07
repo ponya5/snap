@@ -5,8 +5,8 @@
   h2 { margin: 0 0 16px; }
   .row { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 12px 0; }
   input[type=text], select, input[type=number] { background: #333; color: #fff; border: 1px solid #555; border-radius: 5px; padding: 6px 8px; font-size: 14px; }
-  #hotkey { width: 180px; text-align: center; cursor: pointer; }
-  #hotkey.rec { border-color: #2d7ff9; }
+    .hk { width: 180px; text-align: center; cursor: pointer; }
+  .hk.rec { border-color: #2d7ff9; }
   #folder { width: 190px; }
   button { background: #2d7ff9; color: #fff; border: 0; border-radius: 5px; padding: 7px 12px; cursor: pointer; }
   button.g { background: #444; }
@@ -14,7 +14,8 @@
   small { color: #999; }
 </style>
 <h2>Snap Settings</h2>
-<div class="row"><span>Capture shortcut</span><input id="hotkey" type="text" readonly></div>
+<div class="row"><span>Screenshot shortcut</span><input id="hotkey" class="hk" type="text" readonly></div>
+<div class="row"><span>Video recording shortcut</span><input id="videoHotkey" class="hk" type="text" readonly></div>
 <div class="row"><span>Save folder<br><small>empty = Pictures / Movies</small></span>
   <span><input id="folder" type="text" readonly placeholder="Default"> <button class="g" id="pick">Browse</button></span></div>
 <div class="row"><span>Ask where to save each time</span><input id="ask" type="checkbox"></div>
@@ -27,33 +28,37 @@
 <script>
 const $ = id => document.getElementById(id);
 const mac = navigator.platform.includes('Mac');
-let hotkey = '';
+const keys = { hotkey: '', videoHotkey: '' };
 const show = a => a.replace('CommandOrControl', mac ? '⌘' : 'Ctrl').replace(/\+/g, ' + ');
 const KEYS = { ' ': 'Space', ArrowUp: 'Up', ArrowDown: 'Down', ArrowLeft: 'Left', ArrowRight: 'Right' };
 
+function load(s) { for (const k in keys) { keys[k] = s[k]; $(k).value = show(s[k]); } }
 api.settings.get().then(s => {
-  hotkey = s.hotkey; $('hotkey').value = show(hotkey);
+  load(s);
   $('folder').value = s.folder; $('ask').checked = s.askWhere; $('format').value = s.format; $('vformat').value = s.videoFormat;
   $('countdown').value = s.countdown; $('sys').checked = s.sys; $('mic').checked = s.mic;
 });
 
-$('hotkey').onfocus = () => { $('hotkey').classList.add('rec'); $('hotkey').value = 'Press new shortcut…'; };
-$('hotkey').onblur = () => { $('hotkey').classList.remove('rec'); $('hotkey').value = show(hotkey); };
-$('hotkey').onkeydown = e => {
-  e.preventDefault();
-  if (['Meta', 'Control', 'Alt', 'Shift'].includes(e.key)) return;
-  if (!(e.metaKey || e.ctrlKey || e.altKey)) { $('msg').textContent = 'Use at least Ctrl/Cmd or Alt.'; return; }
-  const k = KEYS[e.key] || (e.key.length === 1 ? e.key.toUpperCase() : e.key);
-  hotkey = [(e.metaKey || e.ctrlKey) && 'CommandOrControl', e.altKey && 'Alt', e.shiftKey && 'Shift', k].filter(Boolean).join('+');
-  $('msg').textContent = ''; $('hotkey').blur();
-};
+for (const k in keys) {
+  const el = $(k);
+  el.onfocus = () => { el.classList.add('rec'); el.value = 'Press new shortcut…'; };
+  el.onblur = () => { el.classList.remove('rec'); el.value = show(keys[k]); };
+  el.onkeydown = e => {
+    e.preventDefault();
+    if (['Meta', 'Control', 'Alt', 'Shift'].includes(e.key)) return;
+    if (!(e.metaKey || e.ctrlKey || e.altKey)) { $('msg').textContent = 'Use at least Ctrl/Cmd or Alt.'; return; }
+    const key = KEYS[e.key] || (e.key.length === 1 ? e.key.toUpperCase() : e.key);
+    keys[k] = [(e.metaKey || e.ctrlKey) && 'CommandOrControl', e.altKey && 'Alt', e.shiftKey && 'Shift', key].filter(Boolean).join('+');
+    $('msg').textContent = ''; el.blur();
+  };
+}
 $('pick').onclick = async () => { const f = await api.settings.pick(); if (f) $('folder').value = f; };
 $('save').onclick = async () => {
   const r = await api.settings.set({
-    hotkey, folder: $('folder').value, askWhere: $('ask').checked, format: $('format').value, videoFormat: $('vformat').value,
+    hotkey: keys.hotkey, videoHotkey: keys.videoHotkey, folder: $('folder').value, askWhere: $('ask').checked, format: $('format').value, videoFormat: $('vformat').value,
     countdown: Math.max(0, Math.min(10, +$('countdown').value || 0)), sys: $('sys').checked, mic: $('mic').checked,
   });
-  if (r.error) { $('msg').textContent = r.error; api.settings.get().then(s => { hotkey = s.hotkey; $('hotkey').value = show(hotkey); }); }
+  if (r.error) { $('msg').textContent = r.error; api.settings.get().then(load); }
   else api.cmd('closeSettings');
 };
 </script>

@@ -87,7 +87,11 @@ function setMode(m, user) {
   if (editing) { bar.style.display = 'none'; $('vbar').style.display = 'none'; place(m === 'shot' ? bar : $('vbar')); }
 }
 document.querySelectorAll('[data-m]').forEach(b => b.onclick = () => setMode(b.dataset.m, true));
-api.onShot(({ url, mode: m, sys, mic }) => {
+api.onShot(({ url, mode: m, sys, mic, fixed }) => {
+  if (fixed) {
+    document.querySelectorAll('[data-m]').forEach(b => b.style.display = 'none');
+    $('hint').textContent = (m === 'video' ? 'Drag to select the area to record' : 'Drag to select an area to capture') + ' · Esc to cancel';
+  }
   $('sys').checked = sys; $('mic').checked = mic;
   img = new Image();
   img.onload = () => { c.width = innerWidth * dpr; c.height = innerHeight * dpr; S = img.width / innerWidth; render(); };

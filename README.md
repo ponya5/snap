@@ -17,7 +17,7 @@ Press a shortcut, drag over any part of the screen, then either annotate and sav
 - **Full screen:** one click captures the whole display.
 - **Tooltips:** hover any button to see what it does.
 - **Video mode:** record the selected area with a 5-second countdown (configurable). Toggle system sound and microphone before you start. A small stop bar with a timer appears outside the recording.
-- **Mode bar:** switch between Screenshot and Video at the top of the capture screen. Snap remembers your last choice.
+- **Two shortcuts:** one for screenshots and one for video, so you go straight to selecting an area. The tray icon and Snap window show a Screenshot / Video switch instead.
 - **Settings:** change the shortcut, default save folder, ask-where-to-save or auto-save, screenshot format, countdown length, and default audio toggles.
 - **Tray app:** runs in the menu bar / system tray. Also reachable from the Dock icon menu and `Cmd/Ctrl+,`.
 
@@ -25,12 +25,14 @@ Press a shortcut, drag over any part of the screen, then either annotate and sav
 
 | Action | How |
 | --- | --- |
-| Start a capture | `Cmd/Ctrl+Shift+S` (changeable), tray icon, or Dock icon |
+| Take a screenshot | `Cmd/Ctrl+Shift+S` (changeable in Settings) |
+| Record a video | `Cmd/Ctrl+Shift+R` (changeable in Settings) |
+| Capture with a mode switch | tray icon or the Snap window |
 | Cancel | `Esc` |
 | Copy screenshot | `Cmd/Ctrl+C` or the Copy button |
 | Save screenshot | `Cmd/Ctrl+S` or the Save button |
 | Undo last drawing | `Cmd/Ctrl+Z` |
-| Stop a recording | Stop button, the capture shortcut, or a click on the Dock icon |
+| Stop a recording | Stop button, either shortcut, or a click on the Dock icon |
 | Open settings | ⚙️ in the capture screen, tray menu, Dock menu, or `Cmd/Ctrl+,` |
 
 Videos are saved as `.mp4` when supported, otherwise `.webm`. Settings are stored in `settings.json` in the app's user data folder.
@@ -50,7 +52,7 @@ There is no published download yet, so you build the installer once from source.
    ```
 2. Open `dist/Snap-0.1.0-arm64.dmg` and drag **Snap** into **Applications**. Then eject the Snap disk in Finder.
 3. Open Snap from Applications. If macOS says it can't verify the app, right-click Snap, choose **Open**, then **Open** again. Or run `xattr -cr /Applications/Snap.app`.
-4. Press `Cmd+Shift+S` or click "Capture…" in the Snap window. When macOS asks, allow Snap under **System Settings > Privacy & Security > Screen Recording**, then quit and reopen Snap.
+4. Press `Cmd+Shift+S` to take a screenshot or `Cmd+Shift+R` to record a video. When macOS asks, allow Snap under **System Settings > Privacy & Security > Screen Recording**, then quit and reopen Snap.
 
 The DMG matches the architecture of the Mac that built it (Apple Silicon or Intel).
 
@@ -65,7 +67,7 @@ The DMG matches the architecture of the Mac that built it (Apple Silicon or Inte
    ```
 2. Run the installer in `dist/` (`Snap Setup 0.1.0.exe`) and follow the steps.
 3. If Windows SmartScreen warns about an unknown publisher, click **More info > Run anyway**. The installer is unsigned.
-4. Press `Ctrl+Shift+S` to capture. Snap runs in the system tray (the `^` area next to the clock).
+4. Press `Ctrl+Shift+S` for a screenshot or `Ctrl+Shift+R` to record a video. Snap runs in the system tray (the `^` area next to the clock).
 
 To try Snap without installing, run `npm install` and `npm start` instead.
 

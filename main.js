@@ -3,7 +3,7 @@ const path = require('path');
 const { execFile } = require('child_process');
 const fs = require('fs');
 
-const DEFAULTS = { hotkey: 'CommandOrControl+Shift+S', folder: '', askWhere: true, format: 'png', countdown: 5, sys: true, mic: false, mode: 'shot', videoFormat: 'mp4' };
+const DEFAULTS = { hotkey: 'CommandOrControl+Shift+S', videoHotkey: 'CommandOrControl+Shift+R', folder: '', askWhere: true, format: 'png', countdown: 5, sys: true, mic: false, mode: 'shot', videoFormat: 'mp4' };
 const cfgFile = path.join(app.getPath('userData'), 'settings.json');
 let settings = { ...DEFAULTS };
 try { settings = { ...DEFAULTS, ...JSON.parse(fs.readFileSync(cfgFile, 'utf8')) }; } catch (e) {}
@@ -28,7 +28,7 @@ async function sourceFor(display) {
   return null;
 }
 
-async function capture(forceMode) {
+async function capture(forceMode, fixed) {
   if (recorder) return stopRecording();
   if (overlay) return;
   if (home?.isVisible()) { home.hide(); await new Promise(r => setTimeout(r, 250)); }
@@ -45,7 +45,7 @@ async function capture(forceMode) {
   overlay.setAlwaysOnTop(true, 'screen-saver');
   if (mac) overlay.setSimpleFullScreen(true);
   overlay.loadFile('overlay.html');
-  overlay.webContents.once('did-finish-load', () => overlay.webContents.send('shot', { url: src.thumbnail.toDataURL(), sys: settings.sys, mic: settings.mic, mode: typeof forceMode === 'string' ? forceMode : settings.mode }));
+  overlay.webContents.once('did-finish-load', () => overlay.webContents.send('shot', { url: src.thumbnail.toDataURL(), sys: settings.sys, mic: settings.mic, mode: typeof forceMode === 'string' ? forceMode : settings.mode, fixed: fixed === true }));
   overlay.on('closed', () => { overlay = null; });
 }
 
@@ -163,13 +163,18 @@ ipcMain.handle('pv', async (_e, action) => {
 
 ipcMain.on('cmd', (_e, c) => {
   if (c === 'stop') return stopRecording();
-  capture();
+  capture(c === 'shot' || c === 'video' ? c : undefined, c === 'shot' || c === 'video');
 });
 
-function registerHotkey(key) {
+const shoot = () => capture('shot', true);
+const record = () => capture('video', true);
+function registerHotkeys(shotKey, videoKey) {
   globalShortcut.unregisterAll();
-  try { if (globalShortcut.register(key, capture)) return true; } catch (e) {}
-  globalShortcut.register(settings.hotkey, capture); // restore previous
+  try {
+    if (shotKey !== videoKey && globalShortcut.register(shotKey, shoot) && globalShortcut.register(videoKey, record)) return true;
+  } catch (e) {}
+  globalShortcut.unregisterAll();
+  globalShortcut.register(settings.hotkey, shoot); globalShortcut.register(settings.videoHotkey, record); // restore previous
   return false;
 }
 
@@ -180,7 +185,7 @@ ipcMain.handle('s:pick', async () => {
   return r.canceled ? null : r.filePaths[0];
 });
 ipcMain.handle('s:set', (_e, n) => {
-  if (n.hotkey !== settings.hotkey && !registerHotkey(n.hotkey)) return { error: 'That shortcut is not available. Try another.' };
+  if ((n.hotkey !== settings.hotkey || n.videoHotkey !== settings.videoHotkey) && !registerHotkeys(n.hotkey, n.videoHotkey)) return { error: 'A shortcut is unavailable or both are the same. Try another.' };
   settings = { ...settings, ...n };
   fs.writeFileSync(cfgFile, JSON.stringify(settings, null, 2));
   menu();
@@ -201,7 +206,8 @@ ipcMain.on('cmd', (_e, c) => {
 
 function menu() {
   tray.setContextMenu(Menu.buildFromTemplate([
-    { label: recorder ? 'Stop recording' : 'Capture…', accelerator: settings.hotkey, click: capture },
+    recorder ? { label: 'Stop recording', click: stopRecording } : { label: 'Screenshot', accelerator: settings.hotkey, click: shoot },
+    ...(recorder ? [] : [{ label: 'Record video', accelerator: settings.videoHotkey, click: record }]),
     { label: 'Show window', click: showHome },
     { label: 'Settings…', click: showSettings },
     { type: 'separator' },
@@ -225,12 +231,12 @@ app.whenReady().then(() => {
     { label: 'Snap', submenu: [{ label: 'Settings…', accelerator: 'CommandOrControl+,', click: showSettings }, { type: 'separator' }, { role: 'quit' }] },
     { label: 'Edit', submenu: [{ role: 'copy' }, { role: 'paste' }, { role: 'selectAll' }] },
   ]));
-  app.dock?.setMenu(Menu.buildFromTemplate([{ label: 'Capture…', click: capture }, { label: 'Settings…', click: showSettings }]));
+  app.dock?.setMenu(Menu.buildFromTemplate([{ label: 'Screenshot', click: shoot }, { label: 'Record video', click: record }, { label: 'Settings…', click: showSettings }]));
   showHome();
   tray = new Tray(nativeImage.createFromPath(path.join(__dirname, 'icon.png')).resize({ height: 22 }));
   tray.on('click', capture);
   menu();
-  globalShortcut.register(settings.hotkey, capture);
+  registerHotkeys(settings.hotkey, settings.videoHotkey);
 });
 
 app.on('window-all-closed', () => {}); // tray app: keep running
