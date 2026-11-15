@@ -1,6 +1,6 @@
 {
   "name": "snap",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Simple, intuitive screenshot and screen recorder for Windows and macOS",
   "main": "main.js",
   "scripts": {

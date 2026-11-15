@@ -10,6 +10,12 @@ I wanted an app of my own that makes taking a screenshot or a quick video while 
 
 Press a shortcut, drag over any part of the screen, then either annotate and save a screenshot or record that area as video.
 
+<p align="center">
+  <img src="docs/annotate.png" alt="Selecting an area and annotating it with a box, arrow, text, highlight and pixelate" width="720">
+</p>
+
+*Screenshots use fake demo data.*
+
 ## Features
 
 - **Area capture:** press the shortcut, drag to select a region of the screen.
@@ -21,6 +27,10 @@ Press a shortcut, drag over any part of the screen, then either annotate and sav
 - **Two shortcuts:** one for screenshots and one for video, so you go straight to selecting an area. The tray icon and Snap window show a Screenshot / Video switch instead.
 - **Settings:** change the shortcut, default save folder, ask-where-to-save or auto-save, screenshot format, countdown length, and default audio toggles.
 - **Tray app:** runs in the menu bar / system tray. Also reachable from the Dock icon menu and `Cmd/Ctrl+,`.
+
+| Record a video | Settings |
+| --- | --- |
+| <img src="docs/record.png" alt="Video mode with audio toggles and a Start recording button" width="440"> | <img src="docs/settings.png" alt="Settings window" width="220"> |
 
 ## Usage
 
@@ -51,7 +61,7 @@ Prebuilt installers are attached to each [GitHub release](https://github.com/pon
    npm install
    CSC_IDENTITY_AUTO_DISCOVERY=false npm run dist
    ```
-2. Open `dist/Snap-0.1.0-arm64.dmg` and drag **Snap** into **Applications**. Then eject the Snap disk in Finder.
+2. Open `dist/Snap-0.1.1-arm64.dmg` and drag **Snap** into **Applications**. Then eject the Snap disk in Finder.
 3. Open Snap from Applications. If macOS says it can't verify the app, right-click Snap, choose **Open**, then **Open** again. Or run `xattr -cr /Applications/Snap.app`.
 4. Press `Cmd+Shift+S` to take a screenshot or `Cmd+Shift+R` to record a video. When macOS asks, allow Snap under **System Settings > Privacy & Security > Screen Recording**, then quit and reopen Snap.
 
@@ -66,7 +76,7 @@ The DMG matches the architecture of the Mac that built it (Apple Silicon or Inte
    npm install
    npm run dist -- --win
    ```
-2. Run the installer in `dist/` (`Snap Setup 0.1.0.exe`) and follow the steps.
+2. Run the installer in `dist/` (`Snap Setup 0.1.1.exe`) and follow the steps.
 3. If Windows SmartScreen warns about an unknown publisher, click **More info > Run anyway**. The installer is unsigned.
 4. Press `Ctrl+Shift+S` for a screenshot or `Ctrl+Shift+R` to record a video. Snap runs in the system tray (the `^` area next to the clock).
 
