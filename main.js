@@ -206,7 +206,7 @@ function registerHotkeys(shotKey, videoKey) {
 }
 
 ipcMain.on('mode', (_e, m) => { if (m === 'shot' || m === 'video') { settings.mode = m; saveSettings(); } });
-ipcMain.handle('s:get', () => settings);
+ipcMain.handle('s:get', () => ({ ...settings, launchAtLogin: app.getLoginItemSettings().openAtLogin }));
 ipcMain.handle('version', () => app.getVersion());
 ipcMain.handle('s:pick', async () => {
   if (!settingsWin) return null;
@@ -224,6 +224,8 @@ ipcMain.handle('s:set', (_e, raw) => {
   };
   if (!n.hotkey || !n.videoHotkey) return { error: 'Both shortcuts are required.' };
   if ((n.hotkey !== settings.hotkey || n.videoHotkey !== settings.videoHotkey) && !registerHotkeys(n.hotkey, n.videoHotkey)) return { error: 'A shortcut is unavailable or both are the same. Try another.' };
+  // Unpackaged dev runs would register the bare Electron.app, which opens Electron's default window at login.
+  if (app.isPackaged) app.setLoginItemSettings({ openAtLogin: bool(raw.launchAtLogin), openAsHidden: true });
   settings = { ...settings, ...n };
   saveSettings();
   menu();
@@ -279,7 +281,7 @@ app.whenReady().then(() => {
     { label: 'Edit', submenu: [{ role: 'copy' }, { role: 'paste' }, { role: 'selectAll' }] },
   ]));
   app.dock?.setMenu(Menu.buildFromTemplate([{ label: 'Screenshot', click: shoot }, { label: 'Record video', click: record }, { label: 'Settings…', click: showSettings }]));
-  showHome();
+  if (!app.getLoginItemSettings().wasOpenedAtLogin) showHome(); // start quietly in the menu bar at login
   tray = new Tray(nativeImage.createFromPath(path.join(__dirname, 'icon.png')).resize({ height: 22 }));
   tray.on('click', capture);
   menu();

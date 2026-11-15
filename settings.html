@@ -17,6 +17,7 @@
   footer { margin-top: 16px; min-height: 14px; text-align: center; color: #777; font-size: 11px; }
 </style>
 <h2>Snap Settings</h2>
+<div class="row"><span>Launch Snap when I log in<br><small>starts quietly in the menu bar</small></span><input id="login" type="checkbox"></div>
 <div class="row"><span>Screenshot shortcut</span><input id="hotkey" class="hk" type="text" readonly></div>
 <div class="row"><span>Video recording shortcut</span><input id="videoHotkey" class="hk" type="text" readonly></div>
 <div class="row"><span>Save folder<br><small>empty = Pictures / Movies</small></span>
@@ -40,7 +41,7 @@ const KEYS = { ' ': 'Space', ArrowUp: 'Up', ArrowDown: 'Down', ArrowLeft: 'Left'
 function load(s) { for (const k in keys) { keys[k] = s[k]; $(k).value = show(s[k]); } }
 api.settings.get().then(s => {
   load(s);
-  $('folder').value = s.folder; $('ask').checked = s.askWhere; $('format').value = s.format; $('vformat').value = s.videoFormat; $('flash').checked = s.flash; $('sound').checked = s.sound;
+  $('folder').value = s.folder; $('ask').checked = s.askWhere; $('format').value = s.format; $('vformat').value = s.videoFormat; $('flash').checked = s.flash; $('sound').checked = s.sound; $('login').checked = s.launchAtLogin;
   $('countdown').value = s.countdown; $('sys').checked = s.sys; $('mic').checked = s.mic;
 });
 
@@ -60,7 +61,7 @@ for (const k in keys) {
 $('pick').onclick = async () => { const f = await api.settings.pick(); if (f) $('folder').value = f; };
 $('save').onclick = async () => {
   const r = await api.settings.set({
-    hotkey: keys.hotkey, videoHotkey: keys.videoHotkey, folder: $('folder').value, askWhere: $('ask').checked, format: $('format').value, videoFormat: $('vformat').value, flash: $('flash').checked, sound: $('sound').checked,
+    hotkey: keys.hotkey, videoHotkey: keys.videoHotkey, folder: $('folder').value, askWhere: $('ask').checked, format: $('format').value, videoFormat: $('vformat').value, flash: $('flash').checked, sound: $('sound').checked, launchAtLogin: $('login').checked,
     countdown: Math.max(0, Math.min(10, +$('countdown').value || 0)), sys: $('sys').checked, mic: $('mic').checked,
   });
   if (r.error) { $('msg').textContent = r.error; api.settings.get().then(load); }
