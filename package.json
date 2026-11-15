@@ -1,12 +1,12 @@
 {
   "name": "snap",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Simple, intuitive screenshot and screen recorder for Windows and macOS",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
-    "dist": "electron-builder --mac dmg",
-    "dist:win": "electron-builder --win"
+    "dist": "electron-builder --mac dmg --publish never",
+    "dist:win": "electron-builder --win --publish never"
   },
   "devDependencies": {
     "electron": "^33.0.0",

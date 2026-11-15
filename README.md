@@ -63,7 +63,7 @@ Prebuilt installers are attached to each [GitHub release](https://github.com/pon
    npm install
    CSC_IDENTITY_AUTO_DISCOVERY=false npm run dist
    ```
-2. Open `dist/Snap-0.1.1-arm64.dmg` and drag **Snap** into **Applications**. Then eject the Snap disk in Finder.
+2. Open `dist/Snap-0.1.2-arm64.dmg` and drag **Snap** into **Applications**. Then eject the Snap disk in Finder.
 3. Open Snap from Applications. If macOS says it can't verify the app, right-click Snap, choose **Open**, then **Open** again. Or run `xattr -cr /Applications/Snap.app`.
 4. Press `Cmd+Shift+S` to take a screenshot or `Cmd+Shift+R` to record a video. When macOS asks, allow Snap under **System Settings > Privacy & Security > Screen Recording**, then quit and reopen Snap.
 
@@ -78,7 +78,7 @@ The DMG matches the architecture of the Mac that built it (Apple Silicon or Inte
    npm install
    npm run dist -- --win
    ```
-2. Run the installer in `dist/` (`Snap Setup 0.1.1.exe`) and follow the steps.
+2. Run the installer in `dist/` (`Snap Setup 0.1.2.exe`) and follow the steps.
 3. If Windows SmartScreen warns about an unknown publisher, click **More info > Run anyway**. The installer is unsigned.
 4. Press `Ctrl+Shift+S` for a screenshot or `Ctrl+Shift+R` to record a video. Snap runs in the system tray (the `^` area next to the clock).
 
