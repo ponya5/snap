@@ -123,9 +123,9 @@ ipcMain.on('rec', async (_e, o) => {
 
   // Stop bar, placed outside the region and hidden from capture.
   const b = d.bounds, h = 44, w = 220;
-  const above = o.region.y > h + 10;
+  const above = o.region.y > d.workArea.y - d.bounds.y + h + 10; // workArea skips the menu bar / camera notch
   control = new BrowserWindow({
-    x: b.x + Math.round(b.width / 2 - w / 2), y: b.y + (above ? 8 : b.height - h - 8), width: w, height: h,
+    x: b.x + Math.round(b.width / 2 - w / 2), y: (above ? d.workArea.y + 8 : b.y + b.height - h - 8), width: w, height: h,
     frame: false, resizable: false, alwaysOnTop: true, skipTaskbar: true, focusable: false, webPreferences: webPrefs,
   });
   control.setContentProtection(true);
