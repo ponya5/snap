@@ -6,7 +6,11 @@ const fs = require('fs');
 const DEFAULTS = { flash: true, sound: true, hotkey: 'CommandOrControl+Shift+S', videoHotkey: 'CommandOrControl+Shift+R', folder: '', askWhere: true, format: 'png', countdown: 5, sys: true, mic: false, mode: 'shot', videoFormat: 'mp4' };
 const cfgFile = path.join(app.getPath('userData'), 'settings.json');
 let settings = { ...DEFAULTS };
-try { settings = { ...DEFAULTS, ...JSON.parse(fs.readFileSync(cfgFile, 'utf8')) }; } catch (e) {}
+try { settings = { ...DEFAULTS, ...JSON.parse(fs.readFileSync(cfgFile, 'utf8')) }; } catch (e) { /* first run or unreadable file: use defaults */ }
+const saveSettings = () => { try { fs.writeFileSync(cfgFile, JSON.stringify(settings, null, 2)); } catch (e) { console.error('Could not save settings:', e.message); } };
+
+// Only one instance: a second launch would fight over the global shortcuts.
+if (!app.requestSingleInstanceLock()) app.quit();
 let tray, settingsWin, overlay, overlayDisplay, recorder, control, home, pending, frame, pvWin, pv;
 
 const stamp = () => new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
@@ -49,12 +53,12 @@ async function capture(forceMode, fixed) {
   overlay.on('closed', () => { overlay = null; });
 }
 
-// Flash + shutter sound on the captured area, then close the overlay.
+// Quick full-screen flash + shutter sound, then close the overlay.
 async function finish() {
-  if (overlay && (settings.flash || settings.sound)) { overlay.webContents.send('fx'); await new Promise(r => setTimeout(r, 420)); }
+  if (overlay && (settings.flash || settings.sound)) { overlay.webContents.send('fx'); await new Promise(r => setTimeout(r, 220)); }
   overlay?.close();
 }
-ipcMain.on('copy', async (_e, url) => { clipboard.writeImage(nativeImage.createFromDataURL(url)); await finish(); });
+ipcMain.on('copy', async (_e, url) => { if (!overlay || typeof url !== 'string') return; clipboard.writeImage(nativeImage.createFromDataURL(url)); await finish(); });
 ipcMain.on('close', () => overlay?.close());
 async function saveTo(kind, name, filters, data) {
   const dir = settings.folder || app.getPath(kind);
@@ -67,27 +71,34 @@ async function saveTo(kind, name, filters, data) {
     fs.mkdirSync(dir, { recursive: true });
     new Notification({ title: 'Snap', body: 'Saved to ' + file }).show();
   }
-  fs.writeFileSync(file, data(file));
+  try { fs.writeFileSync(file, data(file)); } catch (e) {
+    dialog.showErrorBox('Snap could not save the file', `${file}\n\n${e.message}`);
+    return false;
+  }
   return true;
 }
 
 ipcMain.on('save', async (_e, url) => {
+  if (!overlay || typeof url !== 'string') return;
   overlay.hide();
   const img = nativeImage.createFromDataURL(url);
   const ok = await saveTo('pictures', `screenshot-${stamp()}.${settings.format}`, [{ name: 'Image', extensions: ['png', 'jpg'] }],
     file => (/\.jpe?g$/i.test(file) ? img.toJPEG(92) : img.toPNG()));
-  overlay.show();
+  overlay?.show();
   if (ok) await finish();
 });
 
 // Video: overlay sends region + audio options, then we record the display and crop in the recorder window.
 ipcMain.on('rec', async (_e, o) => {
+  const r0 = o?.region;
+  if (!overlay || recorder || !r0 || ![r0.x, r0.y, r0.w, r0.h, o.dw].every(Number.isFinite) || r0.w < 2 || r0.h < 2) return;
   const d = overlayDisplay;
   overlay.close();
   if (o.mic && process.platform === 'darwin') await systemPreferences.askForMediaAccess('microphone');
   const src = await sourceFor(d);
   if (!src) return;
   const r = o.region, cb = d.bounds;
+  o = { region: r, dw: o.dw, sys: !!o.sys, mic: !!o.mic };
   frame = new BrowserWindow({
     x: cb.x, y: cb.y, width: cb.width, height: cb.height, frame: false, transparent: true, resizable: false, focusable: false,
     alwaysOnTop: true, skipTaskbar: true, hasShadow: false, enableLargerThanScreen: true,
@@ -125,13 +136,22 @@ ipcMain.on('rec', async (_e, o) => {
 
 function stopRecording() { recorder?.webContents.send('stop'); }
 
-ipcMain.on('video', async (_e, buf, ext) => {
-  recorder.destroy(); recorder = null;
+function cleanupRecording() {
+  recorder?.destroy(); recorder = null;
   control?.destroy(); control = null;
   frame?.destroy(); frame = null;
   menu();
+}
+ipcMain.on('recfail', (_e, msg) => {
+  cleanupRecording();
+  dialog.showErrorBox('Snap could not record', String(msg || 'Unknown error'));
+});
+ipcMain.on('video', async (_e, buf, ext) => {
+  if (!recorder) return;
+  cleanupRecording();
+  if (!buf?.byteLength || !['mp4', 'webm'].includes(ext)) return dialog.showErrorBox('Snap could not record', 'The recording was empty.');
   const file = path.join(app.getPath('temp'), `snap-${stamp()}.${ext}`);
-  fs.writeFileSync(file, Buffer.from(buf));
+  try { fs.writeFileSync(file, Buffer.from(buf)); } catch (e) { return dialog.showErrorBox('Snap could not save the recording', e.message); }
   showPreview(file, ext);
 });
 
@@ -158,8 +178,9 @@ ipcMain.handle('pv', async (_e, action) => {
     return ok;
   }
   if (action === 'copy') {
-    const args = process.platform === 'darwin' ? ['osascript', ['-e', `set the clipboard to (POSIX file "${file}")`]]
-      : ['powershell', ['-NoProfile', '-Command', `Set-Clipboard -Path '${file}'`]];
+    // The path is passed as an argument, never spliced into the script.
+    const args = process.platform === 'darwin' ? ['osascript', ['-e', 'on run argv', '-e', 'set the clipboard to (POSIX file (item 1 of argv))', '-e', 'end run', file]]
+      : ['powershell', ['-NoProfile', '-Command', 'Set-Clipboard -LiteralPath $args[0]', file]];
     return new Promise(res => execFile(args[0], args[1], err => res(!err)));
   }
   endPreview(true);
@@ -180,20 +201,30 @@ function registerHotkeys(shotKey, videoKey) {
     if (shotKey !== videoKey && globalShortcut.register(shotKey, shoot) && globalShortcut.register(videoKey, record)) return true;
   } catch (e) {}
   globalShortcut.unregisterAll();
-  globalShortcut.register(settings.hotkey, shoot); globalShortcut.register(settings.videoHotkey, record); // restore previous
+  try { globalShortcut.register(settings.hotkey, shoot); globalShortcut.register(settings.videoHotkey, record); } catch (e) { /* restore previous; ignore invalid */ }
   return false;
 }
 
-ipcMain.on('mode', (_e, m) => { settings.mode = m; fs.writeFileSync(cfgFile, JSON.stringify(settings, null, 2)); });
+ipcMain.on('mode', (_e, m) => { if (m === 'shot' || m === 'video') { settings.mode = m; saveSettings(); } });
 ipcMain.handle('s:get', () => settings);
 ipcMain.handle('s:pick', async () => {
+  if (!settingsWin) return null;
   const r = await dialog.showOpenDialog(settingsWin, { properties: ['openDirectory', 'createDirectory'] });
   return r.canceled ? null : r.filePaths[0];
 });
-ipcMain.handle('s:set', (_e, n) => {
+const bool = v => v === true;
+ipcMain.handle('s:set', (_e, raw) => {
+  if (!raw || typeof raw !== 'object') return { error: 'Invalid settings.' };
+  const n = {
+    hotkey: String(raw.hotkey || ''), videoHotkey: String(raw.videoHotkey || ''), folder: String(raw.folder || ''),
+    askWhere: bool(raw.askWhere), flash: bool(raw.flash), sound: bool(raw.sound), sys: bool(raw.sys), mic: bool(raw.mic),
+    format: raw.format === 'jpg' ? 'jpg' : 'png', videoFormat: raw.videoFormat === 'webm' ? 'webm' : 'mp4',
+    countdown: Math.max(0, Math.min(10, Math.round(+raw.countdown) || 0)),
+  };
+  if (!n.hotkey || !n.videoHotkey) return { error: 'Both shortcuts are required.' };
   if ((n.hotkey !== settings.hotkey || n.videoHotkey !== settings.videoHotkey) && !registerHotkeys(n.hotkey, n.videoHotkey)) return { error: 'A shortcut is unavailable or both are the same. Try another.' };
   settings = { ...settings, ...n };
-  fs.writeFileSync(cfgFile, JSON.stringify(settings, null, 2));
+  saveSettings();
   menu();
   return { ok: true };
 });
@@ -235,6 +266,7 @@ function showHome() {
   home.loadFile('home.html');
   home.on('closed', () => { home = null; });
 }
+app.on('second-instance', showHome);
 app.on('activate', () => (recorder ? stopRecording() : showHome())); // Dock click
 
 app.whenReady().then(() => {
@@ -248,7 +280,7 @@ app.whenReady().then(() => {
   tray = new Tray(nativeImage.createFromPath(path.join(__dirname, 'icon.png')).resize({ height: 22 }));
   tray.on('click', capture);
   menu();
-  registerHotkeys(settings.hotkey, settings.videoHotkey);
+  if (!registerHotkeys(settings.hotkey, settings.videoHotkey)) new Notification({ title: 'Snap', body: 'Could not register the shortcuts. Change them in Settings.' }).show();
 });
 
 app.on('window-all-closed', () => {}); // tray app: keep running

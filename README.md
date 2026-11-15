@@ -14,10 +14,10 @@ Press a shortcut, drag over any part of the screen, then either annotate and sav
 
 - **Area capture:** press the shortcut, drag to select a region of the screen.
 - **Screenshot mode:** annotate the capture with pen, highlighter, line, arrow, rectangle, ellipse, text, and a pixelate tool for hiding sensitive info. Pick any color from a palette (or type a hex value) and choose a size (S/M/L/XL) for line width and text. Resize the selection with its handles, then undo, copy to the clipboard, or save as PNG/JPG.
-- **Capture feedback:** a white flash over the captured area and a camera shutter sound confirm the screenshot. Both can be turned off in Settings.
+- **Capture feedback:** a quick full-screen white flash and a camera shutter sound confirm the screenshot. Both can be turned off in Settings.
 - **Full screen:** one click captures the whole display.
 - **Tooltips:** hover any button to see what it does.
-- **Video mode:** record the selected area with a 5-second countdown (configurable). Toggle system sound and microphone before you start. A small stop bar with a timer appears outside the recording.
+- **Video mode:** record the selected area with a 5-second countdown (configurable). Toggle system sound and microphone before you start. A red outline marks the recorded area, and a small stop bar with a timer appears outside it (both are hidden from the video).
 - **Two shortcuts:** one for screenshots and one for video, so you go straight to selecting an area. The tray icon and Snap window show a Screenshot / Video switch instead.
 - **Settings:** change the shortcut, default save folder, ask-where-to-save or auto-save, screenshot format, countdown length, and default audio toggles.
 - **Tray app:** runs in the menu bar / system tray. Also reachable from the Dock icon menu and `Cmd/Ctrl+,`.
@@ -40,7 +40,7 @@ Videos are saved as `.mp4` when supported, otherwise `.webm`. Settings are store
 
 ## Install
 
-There is no published download yet, so you build the installer once from source. You need [Node.js](https://nodejs.org) and [Git](https://git-scm.com).
+Prebuilt installers are attached to each [GitHub release](https://github.com/ponya5/snap/releases) when available. Otherwise build the installer once from source. You need [Node.js](https://nodejs.org) and [Git](https://git-scm.com).
 
 ### macOS
 
@@ -96,14 +96,20 @@ The DMG is written to `dist/`. The build is unsigned and targets the architectur
 
 Because the app is unsigned, macOS ties the permission to each specific build. After installing a new build you may need to grant it again. On first open, right-click the app and choose Open, or run `xattr -cr /Applications/Snap.app`.
 
+## Security and privacy
+
+- Snap makes no network requests and sends no telemetry. Screenshots and recordings stay on your machine.
+- Windows run with context isolation, sandboxing and a strict Content-Security-Policy. The renderer only talks to the main process through a small, validated IPC bridge.
+- Settings live in `settings.json` in the app's user data folder. Unsaved recordings sit in the system temp folder until you save or discard them.
+
 ## Status
 
-Early release (v0.1.0). It works as a personal tool but is not production grade: the build is unsigned and not notarized and there is no auto-update. Use at your own risk.
+v0.1.x. Usable day to day, but the build is unsigned and not notarized and there is no auto-update. There is no automated test suite yet.
 
 ## Known limitations
 
 - System sound capture uses Electron's loopback audio and needs macOS 13 or later (or Windows).
-- Video records one rectangular area of a single display, with no on-screen outline while recording.
+- Video records one rectangular area of a single display.
 - No blur tool, upload or share links, or auto-update.
 - Not code-signed or notarized, so macOS and Windows SmartScreen will warn on first launch.
 
@@ -119,10 +125,12 @@ Early release (v0.1.0). It works as a personal tool but is not production grade:
 | `countdown.html` | Countdown before recording |
 | `settings.html` | Settings window |
 | `home.html` | Small launcher window |
+| `preview.html` | Post-recording preview |
+| `frame.html` | Red outline around the recorded area |
 
 ## Contributing
 
-Issues and pull requests are welcome, especially signing/notarization setup and Windows support.
+Issues and pull requests are welcome, especially signing/notarization setup and Windows testing. Run `npm start` to try changes. Pushing a `v*` tag builds macOS and Windows installers and attaches them to a GitHub release.
 
 ## License
 

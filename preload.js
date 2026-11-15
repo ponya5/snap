@@ -13,5 +13,6 @@ contextBridge.exposeInMainWorld('api', {
   close: () => ipc.send('close'),
   onStart: f => ipc.on('start', (_e, id) => f(id)),
   onStop: f => ipc.on('stop', f),
+  recFail: m => ipc.send('recfail', m),
   videoDone: (buf, ext) => ipc.send('video', buf, ext),
 });

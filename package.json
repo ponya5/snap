@@ -5,7 +5,8 @@
   "main": "main.js",
   "scripts": {
     "start": "electron .",
-    "dist": "electron-builder --mac dmg"
+    "dist": "electron-builder --mac dmg",
+    "dist:win": "electron-builder --win"
   },
   "devDependencies": {
     "electron": "^33.0.0",
@@ -37,7 +38,8 @@
     },
     "win": {
       "target": "nsis"
-    }
+    },
+    "directories": { "buildResources": "build" }
   },
   "author": "ponya5",
   "license": "MIT",
@@ -45,5 +47,6 @@
     "type": "git",
     "url": "git+https://github.com/ponya5/snap.git"
   },
+  "bugs": { "url": "https://github.com/ponya5/snap/issues" },
   "homepage": "https://github.com/ponya5/snap#readme"
 }

@@ -1,7 +1,8 @@
 <!doctype html><meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; media-src blob: mediastream:">
 <video id="v" muted></video><canvas id="c"></canvas>
 <script>
-api.onStart(async o => {
+api.onStart(async o => { try {
   const ctx = new AudioContext(), dest = ctx.createMediaStreamDestination();
   let hasAudio = false;
   const feed = stream => { ctx.createMediaStreamSource(stream).connect(dest); hasAudio = true; };
@@ -36,5 +37,5 @@ api.onStart(async o => {
   };
   api.onStop(() => rec.stop());
   rec.start(1000);
-});
+} catch (e) { api.recFail(e.message); } });
 </script>
