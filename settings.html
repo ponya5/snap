@@ -13,6 +13,7 @@
   button.g { background: #444; }
   #msg { height: 18px; color: #f77; font-size: 12px; }
   small { color: #999; }
+  footer a { color: #2d7ff9; }
   footer { margin-top: 16px; min-height: 14px; text-align: center; color: #777; font-size: 11px; }
 </style>
 <h2>Snap Settings</h2>
@@ -66,6 +67,6 @@ $('save').onclick = async () => {
   else api.cmd('closeSettings');
 };
 </script>
-<footer id="ver"></footer>
+<footer><span id="ver"></span> · <a href="https://github.com/ponya5/snap" target="_blank">GitHub</a></footer>
 <script>api.version().then(v => { document.getElementById('ver').textContent = 'Snap v' + v; });</script>
 <script>window.addEventListener('load', () => setTimeout(() => api.fit(document.body.getBoundingClientRect().height), 50));</script>

@@ -2,7 +2,7 @@
 <meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; img-src data: blob:">
 <style>
-  html, body { margin: 0; overflow: hidden; cursor: crosshair; user-select: none; font: 13px system-ui; background: #000; }
+  html, body { margin: 0; overflow: hidden; cursor: crosshair; user-select: none; font: 13px system-ui; background: transparent; }
   canvas { position: fixed; inset: 0; width: 100%; height: 100%; }
   #bar, #vbar { position: fixed; display: none; gap: 4px; padding: 4px; background: #222; border-radius: 6px; box-shadow: 0 2px 8px #0008; cursor: default; align-items: center; }
   #bar button, #vbar button, #pick button { background: #444; color: #fff; border: 0; border-radius: 4px; padding: 6px 10px; cursor: pointer; font-size: 13px; }
@@ -92,8 +92,8 @@ function shutter() {
   }
 }
 api.onFx(() => {
-  bar.style.display = 'none'; pal.style.display = 'none'; $('pick').style.display = 'none';
   if (fx.flash) {
+    bar.style.display = 'none'; pal.style.display = 'none'; $('pick').style.display = 'none';
     const f = document.createElement('div');
     Object.assign(f.style, { position: 'fixed', inset: 0, background: '#fff', opacity: '1', transition: 'opacity 140ms ease-out', pointerEvents: 'none', zIndex: 20 });
     document.body.appendChild(f);
@@ -152,7 +152,7 @@ const HANDLES = [['nw', 0, 0], ['n', .5, 0], ['ne', 1, 0], ['e', 1, .5], ['se', 
 
 function render() {
   g.setTransform(dpr, 0, 0, dpr, 0, 0);
-  g.drawImage(img, 0, 0, innerWidth, innerHeight);
+  g.clearRect(0, 0, innerWidth, innerHeight); // live screen shows through; img is only used for export/pixelate
   g.fillStyle = '#0008';
   if (!sel) return g.fillRect(0, 0, innerWidth, innerHeight);
   const { x, y, w, h } = sel;
@@ -180,7 +180,7 @@ function exportPNG() {
 
 // ---- selection
 function enterEdit() {
-  editing = true; document.body.style.cursor = 'default'; $('hint').style.display = 'none';
+  editing = true; document.body.style.cursor = 'default'; $('hint').style.display = 'none'; $('pick').style.display = 'none';
   place(mode === 'shot' ? bar : $('vbar')); render();
 }
 function place(el) {
@@ -190,7 +190,7 @@ function place(el) {
   const below = sel.y + sel.h + 8;
   el.style.top = (below + h < innerHeight ? below : Math.max(4, sel.y + sel.h - h - 8)) + 'px';
 }
-$('full').onclick = () => { sel = { x: 0, y: 0, w: innerWidth, h: innerHeight }; enterEdit(); };
+$('full').onclick = () => { start = null; sel = { x: 0, y: 0, w: innerWidth, h: innerHeight }; enterEdit(); };
 
 const inSel = e => e.clientX >= sel.x && e.clientX <= sel.x + sel.w && e.clientY >= sel.y && e.clientY <= sel.y + sel.h;
 const rect = e => ({ x: Math.min(start.x, e.clientX), y: Math.min(start.y, e.clientY), w: Math.abs(e.clientX - start.x), h: Math.abs(e.clientY - start.y) });

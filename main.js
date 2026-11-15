@@ -44,7 +44,7 @@ async function capture(forceMode, fixed) {
   overlay = new BrowserWindow({
     x: d.bounds.x, y: d.bounds.y, width: d.bounds.width, height: d.bounds.height,
     frame: false, resizable: false, movable: false, skipTaskbar: true, hasShadow: false,
-    fullscreen: !mac, alwaysOnTop: true, webPreferences: webPrefs,
+    transparent: true, backgroundColor: '#00000000', fullscreen: !mac, alwaysOnTop: true, webPreferences: webPrefs,
   });
   overlay.setAlwaysOnTop(true, 'screen-saver');
   if (mac) overlay.setSimpleFullScreen(true);
@@ -233,6 +233,7 @@ ipcMain.handle('s:set', (_e, raw) => {
 function showSettings() {
   if (settingsWin) return settingsWin.show();
   settingsWin = new BrowserWindow({ width: 440, height: 600, resizable: false, title: 'Snap Settings', webPreferences: webPrefs });
+  settingsWin.webContents.setWindowOpenHandler(({ url }) => { if (url === 'https://github.com/ponya5/snap') shell.openExternal(url); return { action: 'deny' }; });
   settingsWin.setMenuBarVisibility(false);
   settingsWin.loadFile('settings.html');
   settingsWin.on('closed', () => { settingsWin = null; });
@@ -271,6 +272,7 @@ app.on('second-instance', showHome);
 app.on('activate', () => (recorder ? stopRecording() : showHome())); // Dock click
 
 app.whenReady().then(() => {
+  require('./updater').startAutoUpdate((level, msg, err) => console[level === 'error' ? 'error' : 'log']('[update]', msg, err?.message || ''));
   session.defaultSession.setDisplayMediaRequestHandler((_req, cb) => cb(pending || {}));
   Menu.setApplicationMenu(Menu.buildFromTemplate([
     { label: 'Snap', submenu: [{ label: 'Settings…', accelerator: 'CommandOrControl+,', click: showSettings }, { type: 'separator' }, { role: 'quit' }] },

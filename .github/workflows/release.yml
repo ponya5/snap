@@ -10,9 +10,9 @@ jobs:
       matrix:
         include:
           - os: macos-latest
-            cmd: npm run dist
+            cmd: npx electron-builder --mac dmg zip --publish always
           - os: windows-latest
-            cmd: npm run dist:win
+            cmd: npx electron-builder --win --publish always
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
@@ -22,8 +22,4 @@ jobs:
       - run: ${{ matrix.cmd }}
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: 'false'
-      - uses: softprops/action-gh-release@v2
-        with:
-          files: |
-            dist/*.dmg
-            dist/*.exe
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

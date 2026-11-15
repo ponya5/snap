@@ -1,11 +1,11 @@
 {
   "name": "snap",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "description": "Simple, intuitive screenshot and screen recorder for Windows and macOS",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
-    "dist": "electron-builder --mac dmg --publish never",
+    "dist": "electron-builder --mac dmg zip --publish never",
     "dist:win": "electron-builder --win --publish never"
   },
   "devDependencies": {
@@ -26,7 +26,8 @@
       "countdown.html",
       "settings.html",
       "frame.html",
-      "preview.html"
+      "preview.html",
+      "updater.js"
     ],
     "mac": {
       "category": "public.app-category.graphics-design",
@@ -39,7 +40,14 @@
     "win": {
       "target": "nsis"
     },
-    "directories": { "buildResources": "build" }
+    "directories": {
+      "buildResources": "build"
+    },
+    "publish": {
+      "provider": "github",
+      "releaseType": "release"
+    },
+    "artifactName": "${productName}-${version}-${os}-${arch}.${ext}"
   },
   "author": "ponya5",
   "license": "MIT",
@@ -47,6 +55,11 @@
     "type": "git",
     "url": "git+https://github.com/ponya5/snap.git"
   },
-  "bugs": { "url": "https://github.com/ponya5/snap/issues" },
-  "homepage": "https://github.com/ponya5/snap#readme"
+  "bugs": {
+    "url": "https://github.com/ponya5/snap/issues"
+  },
+  "homepage": "https://github.com/ponya5/snap#readme",
+  "dependencies": {
+    "electron-updater": "^6.8.11"
+  }
 }
