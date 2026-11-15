@@ -207,6 +207,7 @@ function registerHotkeys(shotKey, videoKey) {
 
 ipcMain.on('mode', (_e, m) => { if (m === 'shot' || m === 'video') { settings.mode = m; saveSettings(); } });
 ipcMain.handle('s:get', () => settings);
+ipcMain.handle('version', () => app.getVersion());
 ipcMain.handle('s:pick', async () => {
   if (!settingsWin) return null;
   const r = await dialog.showOpenDialog(settingsWin, { properties: ['openDirectory', 'createDirectory'] });

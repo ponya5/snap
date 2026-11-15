@@ -50,6 +50,8 @@ Videos are saved as `.mp4` when supported, otherwise `.webm`. Settings are store
 
 ## Install
 
+**Easiest:** download this repo and double-click `install-mac.command` (macOS) or `install-windows.bat` (Windows). They fetch the latest release and install it. On macOS, if Gatekeeper blocks the script, right-click it and choose **Open**. Or run it in a terminal: `bash install-mac.command`.
+
 Prebuilt installers are attached to each [GitHub release](https://github.com/ponya5/snap/releases) when available. Otherwise build the installer once from source. You need [Node.js](https://nodejs.org) and [Git](https://git-scm.com).
 
 ### macOS
